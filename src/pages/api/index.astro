@@ -60,7 +60,7 @@ const endpoints = [
   <h1 class="text-3xl font-semibold tracking-tight">Public API</h1>
   <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
     Every endpoint below is read-only (GET), CORS-enabled, and backed by the same D1 tables shown
-    on <a href="/status" class="text-[var(--color-accent)] hover:underline">/status</a>. Base
+    on <a href="/status" class="text-[var(--color-accent)] underline underline-offset-2">/status</a>. Base
     URL: <code class="rounded bg-[var(--color-bg-subtle)] px-1.5 py-0.5">{apiBase}</code>
   </p>
 
@@ -84,7 +84,12 @@ const endpoints = [
             <code class="text-sm">{e.path}</code>
           </div>
           <p class="mt-2 text-sm text-[var(--color-fg-muted)]">{e.description}</p>
-          <pre class="mt-3 overflow-x-auto rounded-md bg-[var(--color-bg-subtle)] p-3 text-xs"><code>{e.example}</code></pre>
+          <pre
+            tabindex="0"
+            role="region"
+            aria-label={`Example response for ${e.method} ${e.path}`}
+            class="mt-3 overflow-x-auto rounded-md bg-[var(--color-bg-subtle)] p-3 text-xs"
+          ><code>{e.example}</code></pre>
         </div>
       ))
     }

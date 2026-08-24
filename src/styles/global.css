@@ -23,7 +23,9 @@
   --color-fg-muted: #64748b;
   --color-border: #e2e8f0;
   --color-success: #059669;
-  --color-warning: #d97706;
+  /* #d97706 (amber-600) only reaches 3.18:1 against white — fails WCAG AA
+     (4.5:1) for normal-size text. #92400e (amber-800) clears it with margin. */
+  --color-warning: #92400e;
   --color-danger: #dc2626;
   color-scheme: light;
 }
