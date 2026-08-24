@@ -8,14 +8,31 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
 >
   <h1 class="text-3xl font-semibold tracking-tight">Live Data</h1>
   <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
-    This page will show real, currently-running pipelines — not mockups. It intentionally does
-    not claim anything is live until the underlying Worker, D1 tables, and scheduled ingestion
-    are actually deployed and verified.
+    Real, scheduled pipelines — bronze → silver → gold → documented API. Each card below
+    fetches live from that pipeline's own API right now; if a pipeline isn't deployed yet, it
+    says so rather than showing a screenshot pretending otherwise.
   </p>
-  <div class="mt-10 rounded-lg border border-dashed border-[var(--color-border)] p-8 text-center text-[var(--color-fg-muted)]">
-    <p class="font-medium">Pipeline build in progress.</p>
-    <p class="mt-2 text-sm">
-      Check back shortly, or follow along in the <a href={`${"https://github.com/TajammalHussain"}`} class="text-[var(--color-accent)] hover:underline">GitHub repository</a>.
-    </p>
-  </div>
+
+  <ul class="mt-10 grid gap-6 sm:grid-cols-2">
+    <li>
+      <a
+        href="/live/carbon"
+        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <h2 class="font-semibold">UK Grid Carbon Intensity</h2>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
+          Every 30 minutes via Cloudflare Cron Trigger. Bronze → silver → gold → public API.
+        </p>
+        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+      </a>
+    </li>
+    <li class="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-[var(--color-fg-muted)]">
+      <h2 class="font-semibold">UK House Price Data</h2>
+      <p class="mt-2 text-sm">Monthly ingestion — build in progress.</p>
+    </li>
+    <li class="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-[var(--color-fg-muted)]">
+      <h2 class="font-semibold">Site Meta-Pipeline</h2>
+      <p class="mt-2 text-sm">Self-referential build/deploy + analytics ingestion — build in progress.</p>
+    </li>
+  </ul>
 </BaseLayout>

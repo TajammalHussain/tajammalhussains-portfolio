@@ -1,17 +1,19 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import StatusWidget from "@/components/StatusWidget.astro";
 ---
 
 <BaseLayout
   title="System Status"
-  description="Pipeline health, data quality check results, and freshness status."
+  description="Pipeline health, data quality check results, and freshness status — real results, including honest failures."
 >
   <h1 class="text-3xl font-semibold tracking-tight">System Status</h1>
   <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
-    Real data-quality check results will be shown here once the pipelines are deployed —
-    including honest failures. Nothing is faked green while this page is a placeholder.
+    Real data-quality check results per pipeline: freshness, completeness, validity, uniqueness,
+    and referential integrity. Failures are shown honestly — a system that never fails a check is
+    either trivial or not being checked properly.
   </p>
-  <div class="mt-10 rounded-lg border border-dashed border-[var(--color-border)] p-8 text-center text-[var(--color-fg-muted)]">
-    <p class="font-medium">No pipelines deployed yet.</p>
+  <div class="mt-10">
+    <StatusWidget />
   </div>
 </BaseLayout>

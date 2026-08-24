@@ -1,0 +1,190 @@
+---
+// Lazy island: Chart.js is only fetched here, on the one page that needs it.
+// Renders real data from the pipeline API — no fixture, no screenshot. If the
+// API is unreachable or the data is stale, this says so plainly rather than
+// silently showing numbers as current (spec: graceful degradation).
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
+---
+
+<div
+  id="carbon-live-widget"
+  data-api-base={apiBase}
+  class="rounded-lg border border-[var(--color-border)] p-6"
+>
+  <div id="carbon-loading" class="text-sm text-[var(--color-fg-muted)]">Loading live data…</div>
+  <div id="carbon-error" class="hidden text-sm text-[var(--color-danger)]"></div>
+  <div id="carbon-content" class="hidden">
+    <div class="flex flex-wrap items-baseline justify-between gap-3">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+          Current carbon intensity
+        </p>
+        <p class="mt-1 text-4xl font-bold" id="carbon-current-value">—</p>
+      </div>
+      <span
+        id="carbon-index-band"
+        class="rounded-full px-3 py-1 text-xs font-semibold"
+      ></span>
+    </div>
+    <p id="carbon-freshness" class="mt-2 text-xs text-[var(--color-fg-muted)]"></p>
+
+    <div class="mt-6">
+      <canvas id="carbon-history-chart" height="220"></canvas>
+    </div>
+    <div class="mt-8">
+      <canvas id="carbon-mix-chart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const BAND_COLORS: Record<string, { bg: string; fg: string }> = {
+    "very low": { bg: "#ECFDF5", fg: "#059669" },
+    low: { bg: "#ECFDF5", fg: "#059669" },
+    moderate: { bg: "#FFFBEB", fg: "#D97706" },
+    high: { bg: "#FEF2F2", fg: "#DC2626" },
+    "very high": { bg: "#FEF2F2", fg: "#DC2626" },
+  };
+
+  async function initCarbonWidget() {
+    const root = document.getElementById("carbon-live-widget");
+    if (!root) return;
+    const apiBase = root.dataset.apiBase ?? "";
+    const loadingEl = document.getElementById("carbon-loading")!;
+    const errorEl = document.getElementById("carbon-error")!;
+    const contentEl = document.getElementById("carbon-content")!;
+
+    try {
+      const [currentRes, historyRes, mixRes] = await Promise.all([
+        fetch(`${apiBase}/api/v1/carbon/current`),
+        fetch(
+          `${apiBase}/api/v1/carbon/history?from=${sevenDaysAgo()}&to=${today()}&granularity=daily`,
+        ),
+        fetch(`${apiBase}/api/v1/carbon/mix`),
+      ]);
+
+      if (!currentRes.ok) {
+        throw new Error(`API returned ${currentRes.status} — pipeline may not be deployed yet`);
+      }
+
+      const { data: current } = await currentRes.json();
+      const { data: history } = historyRes.ok ? await historyRes.json() : { data: [] };
+      const { data: mix } = mixRes.ok ? await mixRes.json() : { data: null };
+
+      // Freshness check, rendered client-side too — never trust that the API
+      // response is "current" just because we got a 200.
+      const periodTo = new Date(current.periodTo.replace("Z", "") + "Z");
+      const ageMinutes = (Date.now() - periodTo.getTime()) / 60_000;
+      const freshnessEl = document.getElementById("carbon-freshness")!;
+      if (ageMinutes > 90) {
+        freshnessEl.textContent = `⚠ Data is ${Math.round(ageMinutes)} minutes old — pipeline may be stale.`;
+        freshnessEl.classList.add("text-[var(--color-warning)]", "font-medium");
+      } else {
+        freshnessEl.textContent = `Period ${formatPeriod(current.periodFrom)}–${formatPeriod(current.periodTo)} · updated ${Math.round(ageMinutes)}m ago`;
+      }
+
+      document.getElementById("carbon-current-value")!.textContent =
+        current.actualIntensity !== null
+          ? `${current.actualIntensity} gCO₂/kWh`
+          : `~${current.forecastIntensity} gCO₂/kWh (forecast)`;
+
+      const bandEl = document.getElementById("carbon-index-band")!;
+      const bandColors = BAND_COLORS[current.indexBand] ?? { bg: "#F1F5F9", fg: "#64748B" };
+      bandEl.textContent = current.indexBand;
+      bandEl.style.background = bandColors.bg;
+      bandEl.style.color = bandColors.fg;
+
+      loadingEl.classList.add("hidden");
+      contentEl.classList.remove("hidden");
+
+      const { Chart, registerables } = await import("chart.js");
+      Chart.register(...registerables);
+
+      if (history.length > 0) {
+        const ctx = (document.getElementById("carbon-history-chart") as HTMLCanvasElement).getContext("2d")!;
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: history.map((d: { date: string }) => d.date),
+            datasets: [
+              {
+                label: "Avg actual intensity (gCO₂/kWh)",
+                data: history.map((d: { avg_actual_intensity: number | null }) => d.avg_actual_intensity),
+                borderColor: "#2563eb",
+                backgroundColor: "#2563eb22",
+                tension: 0.2,
+              },
+              {
+                label: "Avg forecast intensity",
+                data: history.map((d: { avg_forecast_intensity: number }) => d.avg_forecast_intensity),
+                borderColor: "#94a3b8",
+                borderDash: [4, 4],
+                tension: 0.2,
+              },
+            ],
+          },
+          options: { responsive: true, plugins: { title: { display: true, text: "Daily average — last 7 days" } } },
+        });
+      }
+
+      if (mix?.mix?.length) {
+        const ctx = (document.getElementById("carbon-mix-chart") as HTMLCanvasElement).getContext("2d")!;
+        new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: mix.mix.map((m: { fuel_type: string }) => m.fuel_type),
+            datasets: [
+              {
+                data: mix.mix.map((m: { avg_share: number }) => m.avg_share),
+                backgroundColor: [
+                  "#2563eb", "#059669", "#d97706", "#dc2626", "#7c3aed",
+                  "#0891b2", "#65a30d", "#db2777", "#78716c",
+                ],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: { title: { display: true, text: `Generation mix — ${mix.date}` } },
+          },
+        });
+      } else {
+        document.getElementById("carbon-mix-chart")!.replaceWith(
+          Object.assign(document.createElement("p"), {
+            className: "text-sm text-[var(--color-fg-muted)]",
+            textContent: "Generation mix not available yet.",
+          }),
+        );
+      }
+    } catch (err) {
+      loadingEl.classList.add("hidden");
+      errorEl.classList.remove("hidden");
+      errorEl.textContent =
+        err instanceof Error
+          ? `Live data unavailable: ${err.message}`
+          : "Live data unavailable.";
+    }
+  }
+
+  function today() {
+    return new Date().toISOString().slice(0, 10);
+  }
+  function sevenDaysAgo() {
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().slice(0, 10);
+  }
+  function formatPeriod(iso: string) {
+    return new Date(iso.replace("Z", "") + "Z").toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initCarbonWidget);
+  } else {
+    initCarbonWidget();
+  }
+</script>

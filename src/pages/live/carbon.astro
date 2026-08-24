@@ -1,0 +1,66 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+import CarbonLiveWidget from "@/components/CarbonLiveWidget.astro";
+---
+
+<BaseLayout
+  title="UK Grid Carbon Intensity — Live Pipeline"
+  description="A real, scheduled Cloudflare Worker pipeline ingesting UK grid carbon intensity every 30 minutes, through bronze, silver and gold layers, served by a documented public API."
+>
+  <div class="mx-auto max-w-3xl">
+    <a href="/live" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
+      >← All pipelines</a
+    >
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight">UK Grid Carbon Intensity</h1>
+    <p class="mt-3 text-lg text-[var(--color-fg-muted)]">
+      Ingests <a href="https://api.carbonintensity.org.uk" class="text-[var(--color-accent)] hover:underline">api.carbonintensity.org.uk</a>
+      every 30 minutes via a Cloudflare Cron Trigger, through a bronze → silver → gold pipeline,
+      served by a documented public API.
+    </p>
+
+    <CarbonLiveWidget />
+
+    <section class="mt-12">
+      <h2 class="text-xl font-semibold">Architecture</h2>
+      <MermaidDiagram
+        chart={`flowchart LR
+  A[api.carbonintensity.org.uk] -->|every 30 min\ncron trigger| B[Bronze\nraw JSON to R2]
+  B --> C[Silver\nparsed, validated, upserted to D1]
+  C --> D[Gold\ndaily aggregates + fuel mix trends]
+  D --> E[Public API\n/api/v1/carbon/*]
+  E --> F[This page\nChart.js island]
+  C -.-> Q[Data quality checks\nfreshness, completeness,\nvalidity, uniqueness, referential]`}
+      />
+    </section>
+
+    <section class="mt-10 grid gap-6 sm:grid-cols-2">
+      <div class="rounded-lg border border-[var(--color-border)] p-5">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+          Schedule
+        </h3>
+        <p class="mt-2">Every 30 minutes (<code>*/30 * * * *</code>)</p>
+      </div>
+      <div class="rounded-lg border border-[var(--color-border)] p-5">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+          Source code
+        </h3>
+        <p class="mt-2">
+          <a
+            href="https://github.com/TajammalHussain/tajammalhussains-portfolio/tree/main/worker/src/pipelines/carbon"
+            class="text-[var(--color-accent)] hover:underline"
+          >
+            worker/src/pipelines/carbon on GitHub →
+          </a>
+        </p>
+      </div>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">Data quality &amp; pipeline runs</h2>
+      <p class="mt-2 text-[var(--color-fg-muted)]">
+        Full check history and run log: see <a href="/status" class="text-[var(--color-accent)] hover:underline">/status</a>.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

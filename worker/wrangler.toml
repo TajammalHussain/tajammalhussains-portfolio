@@ -1,0 +1,47 @@
+name = "portfolio-worker"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# ─── Cron Triggers ────────────────────────────────────────────────────────────
+# Cloudflare passes the matching cron expression as `event.cron` into the
+# scheduled() handler, which dispatches to the right pipeline (see src/index.ts).
+[triggers]
+crons = [
+  "*/30 * * * *", # Pipeline 1 — Carbon Intensity, every 30 minutes
+  "0 6 1 * *",     # Pipeline 2 — Housing, monthly on the 1st at 06:00 UTC
+  "0 5 * * *",     # Pipeline 3 — Site meta-pipeline, daily at 05:00 UTC
+]
+
+# ─── D1 (bronze ingestion log, silver, gold, quality, audit) ───────────────────
+# `database_id` is a placeholder until `wrangler d1 create portfolio_db` is run
+# against a real Cloudflare account — see ARCHITECTURE.md for the deploy steps.
+# Local dev (`wrangler dev` / `wrangler d1 migrations apply --local`) works
+# against a fully local SQLite file regardless of this value.
+[[d1_databases]]
+binding = "DB"
+database_name = "portfolio_db"
+database_id = "REPLACE_WITH_REAL_D1_ID"
+migrations_dir = "migrations"
+
+# ─── R2 (bronze raw payload landing zone) ──────────────────────────────────────
+[[r2_buckets]]
+binding = "BRONZE_BUCKET"
+bucket_name = "portfolio-bronze"
+
+# ─── KV (public API response cache) ────────────────────────────────────────────
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "REPLACE_WITH_REAL_KV_ID"
+
+# ─── Non-secret vars ────────────────────────────────────────────────────────────
+[vars]
+ENVIRONMENT = "development"
+# Guardrails so a runaway job cannot exceed Cloudflare's free-tier limits
+# (see README for the specific numbers assumed).
+MAX_BACKFILL_DAYS_PER_RUN = "31"
+API_CACHE_TTL_SECONDS = "300"
+
+# ─── Secrets (set via `wrangler secret put NAME`, never committed) ─────────────
+# CF_ACCESS_TEAM_DOMAIN
+# CF_ACCESS_AUD
