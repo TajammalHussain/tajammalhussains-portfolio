@@ -1,0 +1,127 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { SITE } from "@/lib/site";
+import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
+import { getEntry } from "astro:content";
+
+const settings = await getEntry("site-settings", "site");
+const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
+---
+
+<BaseLayout
+  title="CV"
+  description="On-page CV for Tajammal Hussain — Data Analyst progressing toward Data Engineer. Downloadable PDF version available."
+>
+  <div class="mx-auto max-w-3xl">
+    <div class="no-print mb-8 flex flex-wrap items-center justify-between gap-4">
+      <h1 class="text-3xl font-semibold tracking-tight">CV</h1>
+      <div class="flex gap-3">
+        <a
+          href={cvPdfPath}
+          download
+          class="rounded-md bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-fg)] hover:opacity-90"
+        >
+          Download PDF
+        </a>
+        <button
+          type="button"
+          onclick="window.print()"
+          class="rounded-md border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--color-accent)]"
+        >
+          Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Semantic, ATS-friendly CV body — deliberately plain markup, styling
+         layered on top rather than baked into the structure. -->
+    <article id="cv-document" class="rounded-lg border border-[var(--color-border)] p-8 print:border-none print:p-0">
+      <header>
+        <h2 class="text-2xl font-bold">{SITE.name}</h2>
+        <p class="text-[var(--color-fg-muted)]">
+          {SITE.jobTitle} · {SITE.location}
+        </p>
+        <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
+          <a href={SITE.sameAs[1]}>{SITE.sameAs[1]}</a> ·
+          <a href={SITE.sameAs[0]}>{SITE.sameAs[0]}</a>
+        </p>
+      </header>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Summary</h3>
+        <p class="mt-2">{TRAJECTORY}</p>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Skills</h3>
+        <dl class="mt-2 space-y-1">
+          {
+            SKILLS.map((s) => (
+              <div>
+                <dt class="inline font-semibold">{s.group}: </dt>
+                <dd class="inline">{s.items.join(", ")}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Education</h3>
+        <ul class="mt-2 space-y-2">
+          {
+            EDUCATION.map((e) => (
+              <li>
+                <p class="font-semibold">{e.qualification}</p>
+                <p class="text-sm text-[var(--color-fg-muted)]">
+                  {e.institution} — {e.grade}
+                </p>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Certifications</h3>
+        <ul class="mt-2 list-inside list-disc space-y-1 text-sm">
+          {
+            CERTIFICATIONS.map((c) => (
+              <li>
+                {c.name}
+                {c.issuer && ` — ${c.issuer}`}
+                {c.detail && ` (${c.detail})`}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Case Studies</h3>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
+          Full write-ups with architecture and outcomes: <a href="/work">{SITE.url}/work</a>
+        </p>
+      </section>
+    </article>
+
+    <p class="no-print mt-6 text-xs text-[var(--color-fg-muted)]">
+      Prefer a file? "Download PDF" fetches a pre-generated PDF from {cvPdfPath}. "Print" uses
+      your browser's print dialog against this same page, styled for paper.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  @media print {
+    #cv-document a {
+      color: inherit;
+      text-decoration: none;
+    }
+    #cv-document a[href^="http"]::after {
+      content: " (" attr(href) ")";
+      font-size: 0.8em;
+      color: #555;
+    }
+  }
+</style>

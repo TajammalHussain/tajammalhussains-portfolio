@@ -1,0 +1,58 @@
+---
+// Manual light/dark toggle, persisted in localStorage, layered on top of
+// prefers-color-scheme (spec section 10). No UI framework needed — this is
+// plain DOM script, kept out of the shipped JS budget for every other page.
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label="Toggle color theme"
+  class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-[var(--color-border)] text-[var(--color-fg-muted)] transition-colors hover:text-[var(--color-fg)]"
+>
+  <svg
+    aria-hidden="true"
+    class="h-4 w-4 [[data-theme=dark]_&]:hidden"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path
+      d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+    ></path>
+  </svg>
+  <svg
+    aria-hidden="true"
+    class="hidden h-4 w-4 [[data-theme=dark]_&]:block"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+  >
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"></path>
+  </svg>
+</button>
+
+<script>
+  const STORAGE_KEY = "theme";
+  const root = document.documentElement;
+  const button = document.getElementById("theme-toggle");
+
+  function currentTheme(): "light" | "dark" {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark") return stored;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+
+  function apply(theme: "light" | "dark") {
+    root.dataset.theme = theme;
+  }
+
+  button?.addEventListener("click", () => {
+    const next = currentTheme() === "dark" ? "light" : "dark";
+    localStorage.setItem(STORAGE_KEY, next);
+    apply(next);
+  });
+</script>

@@ -1,0 +1,140 @@
+---
+import Nav from "@/components/Nav.astro";
+import Footer from "@/components/Footer.astro";
+import { SITE } from "@/lib/site";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+  noIndex?: boolean;
+  /** JSON-LD blocks beyond the site-wide Person schema (Article, BreadcrumbList, etc). */
+  jsonLd?: Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = SITE.description,
+  ogImage = "/og/default.png",
+  noIndex = false,
+  jsonLd = [],
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, SITE.url).toString();
+const absoluteOgImage = new URL(ogImage, SITE.url).toString();
+
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: SITE.name,
+  jobTitle: SITE.jobTitle,
+  description: SITE.description,
+  url: SITE.url,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Derby",
+    addressCountry: "GB",
+  },
+  knowsAbout: [
+    "Data Engineering",
+    "ETL/ELT Pipelines",
+    "Data Modelling",
+    "SQL",
+    "Python",
+    "Azure Data Factory",
+    "Power BI",
+  ],
+  sameAs: SITE.sameAs,
+};
+---
+
+<!doctype html>
+<html lang="en" data-theme-init>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Pre-paint theme resolution — avoids a flash of the wrong theme. Plain
+         inline script, not processed/bundled by Astro. -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem("theme");
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = theme;
+        } catch (e) {
+          /* localStorage unavailable — default light styles still apply */
+        }
+      })();
+    </script>
+
+    <title>{title} · {SITE.name}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={absoluteOgImage} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:locale" content={SITE.locale} />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteOgImage} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${SITE.name} — Writing`}
+      href="/writing/rss.xml"
+    />
+
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(personSchema)} />
+    {
+      jsonLd.map((block) => (
+        <script is:inline type="application/ld+json" set:html={JSON.stringify(block)} />
+      ))
+    }
+
+    <!-- Cloudflare Web Analytics — cookieless, no consent banner required.
+         Token is injected at build time via PUBLIC_CF_ANALYTICS_TOKEN; the
+         script tag is entirely omitted when it isn't set (e.g. local dev). -->
+    {
+      import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: import.meta.env.PUBLIC_CF_ANALYTICS_TOKEN })}
+        />
+      )
+    }
+  </head>
+  <body class="min-h-screen bg-[var(--color-bg)] text-[var(--color-fg)] antialiased">
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-[var(--color-accent)] focus:px-4 focus:py-2 focus:text-[var(--color-accent-fg)]"
+    >
+      Skip to content
+    </a>
+    <Nav />
+    <main id="main-content" class="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

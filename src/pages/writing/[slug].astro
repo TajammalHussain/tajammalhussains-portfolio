@@ -1,0 +1,53 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection, render, type CollectionEntry } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection(
+    "writing",
+    (entry: CollectionEntry<"writing">) => !entry.data.draft,
+  );
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const { data } = post;
+
+const jsonLd = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: data.title,
+    description: data.excerpt,
+    datePublished: data.publishDate.toISOString(),
+    author: { "@type": "Person", name: "Tajammal Hussain" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Writing", item: "/writing" },
+      { "@type": "ListItem", position: 2, name: data.title, item: `/writing/${post.slug}` },
+    ],
+  },
+];
+---
+
+<BaseLayout title={data.title} description={data.excerpt} jsonLd={jsonLd}>
+  <article class="mx-auto max-w-3xl">
+    <a href="/writing" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
+      >← All writing</a
+    >
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight">{data.title}</h1>
+    <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
+      {data.publishDate.toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}
+    </p>
+    <div class="prose prose-slate mt-8 max-w-none dark:prose-invert">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>

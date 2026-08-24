@@ -1,0 +1,63 @@
+---
+title: "Automated Alerting Pipeline"
+slug: "automated-alerting-pipeline"
+summary: >
+  Scheduled Python jobs replacing human memory for expiry and off-hire
+  tracking, with automated email alerts before anything is missed.
+stack: ["Python", "Pandas", "SMTP", "Task Scheduling"]
+featured: false
+draft: false
+publishDate: 2025-11-29
+readingTimeMinutes: 4
+problem: >
+  A number of time-sensitive items — things with expiry dates, or equipment
+  that should be returned or "off-hired" by a certain date — were tracked by
+  someone remembering to check a spreadsheet periodically. This works until
+  it doesn't: a missed check meant a missed expiry or an item sitting on hire
+  for longer than necessary, discovered only when it became a problem.
+constraints: >
+  There was no appetite for a new system people had to remember to log into —
+  the whole point was to stop relying on someone remembering to check
+  something. Alerts needed to reach the right person automatically, with
+  enough lead time to act, and needed to stop firing once the item was
+  actually dealt with (no alert fatigue from a system that keeps warning
+  about something already resolved).
+approach: >
+  I built a scheduled Python job using pandas to read the relevant tracking
+  data, compute which items were approaching or past their threshold date,
+  and send targeted email alerts via SMTP to the right owner — with different
+  lead times for different item types. The job runs on a schedule rather than
+  waiting to be triggered, so the check itself is now automated and cannot be
+  forgotten.
+architecture: >
+  A scheduled job queries the source tracking data, applies date-threshold
+  logic per item category using pandas, and generates a de-duplicated alert
+  list — so an item already alerted on recently isn't alerted on again every
+  single day. Alerts are sent by SMTP with enough context (item, date, owner)
+  to act on immediately without needing to look anything up first.
+outcome: >
+  Expiry and off-hire tracking stopped depending on someone remembering to
+  check a spreadsheet. Alerts now reach the responsible person automatically,
+  with enough lead time to act, rather than the item being discovered
+  overdue.
+retrospective: >
+  I'd add a lightweight acknowledgement step next — a way to mark an alert as
+  "seen and being handled" so the system's own state reflects reality,
+  rather than only suppressing repeat alerts by a time-based cooldown. That
+  would also produce a useful record of how quickly alerts get actioned.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  A[Scheduled job\ntriggers] --> B[Read tracking\ndata]
+  B --> C[Compute\nthreshold status]
+  C --> D{Approaching or\npast threshold?}
+  D -->|yes, not recently alerted| E[Send SMTP\nalert to owner]
+  D -->|no| F[No action]`} />
+
+The important shift here is from **pull** (someone has to remember to check)
+to **push** (the system tells you, on a schedule, without being asked) — a
+small change in direction that removes an entire class of "we forgot" failure.

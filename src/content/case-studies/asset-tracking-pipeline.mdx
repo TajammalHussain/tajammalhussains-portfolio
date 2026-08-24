@@ -1,0 +1,67 @@
+---
+title: "Real-Time Asset Tracking Pipeline"
+slug: "asset-tracking-pipeline"
+summary: >
+  Python and QR-code ingestion replacing a manual spreadsheet with live
+  location and status data for physical equipment.
+stack: ["Python", "QR Codes", "SQL Server", "Pandas"]
+featured: true
+draft: false
+publishDate: 2025-11-15
+readingTimeMinutes: 5
+problem: >
+  Physical equipment and assets were tracked in a shared spreadsheet, updated
+  by hand whenever something moved between sites or changed status. The
+  spreadsheet was frequently out of date the moment someone checked it —
+  updates depended on someone remembering to make them — and there was no
+  reliable way to answer "where is this item right now" without phoning
+  around.
+constraints: >
+  Site staff were not going to adopt a workflow that required a laptop, a
+  login, and manual data entry every time something moved — it needed to be
+  fast enough to do with a phone in the middle of other work. Any solution
+  had to work with equipment that was already labelled or cheap to label, and
+  had to tolerate patchy site connectivity.
+approach: >
+  I gave every tracked asset a QR code and built a lightweight scanning flow:
+  scan the code, select a status or location from a short list, submit. Each
+  scan is an ingestion event — a timestamped record of what was scanned, by
+  whom, where, and to what status — rather than an edit to a single "current
+  state" row, so the full movement history of an asset is preserved
+  automatically instead of being overwritten.
+architecture: >
+  A Python ingestion service receives scan events and writes them to a SQL
+  Server events table. A separate aggregation step derives each asset's
+  current location and status from its most recent event, so "current state"
+  is always a computed view over the event history rather than a value that
+  can silently drift out of sync with reality. Pandas-based reporting scripts
+  run on top of the same event table for utilisation and movement analysis.
+outcome: >
+  Asset location and status became something anyone could check directly,
+  instead of something that depended on the spreadsheet being current. The
+  event-based design meant the full movement history of any asset was
+  available for free — useful for spotting equipment that hadn't moved in a
+  long time, or reconstructing where something had been when a dispute came
+  up.
+retrospective: >
+  I'd add offline queuing to the scanning flow from the start — on a site
+  with a dead connectivity pocket, a scan should queue locally and sync once
+  a signal is available, rather than requiring a live connection at the
+  moment of scanning. I initially treated connectivity as a given, which
+  wasn't true everywhere the system needed to work.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  A[QR scan on\nsite] --> B[Ingestion\nservice]
+  B --> C[(Event log\ntimestamped)]
+  C --> D[Aggregation:\nlatest event per asset]
+  D --> E[Current location\n+ status view]
+  C --> F[Pandas reporting:\nutilisation, dwell time]`} />
+
+Treating every scan as an immutable event rather than overwriting a "current
+state" field is the key decision here — it turns a simple scanning app into a
+small, genuinely useful audit trail almost for free.

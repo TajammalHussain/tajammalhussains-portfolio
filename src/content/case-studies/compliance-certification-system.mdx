@@ -1,0 +1,76 @@
+---
+title: "Compliance & Certification Workflow System"
+slug: "compliance-certification-system"
+summary: >
+  Replaced a manual, paper-based sign-off process for compliance and
+  certification requirements with an e-signature workflow and structured
+  calculation records.
+stack: ["SQL Server", "VBA", "Power BI", "Business Process Design"]
+featured: true
+draft: false
+publishDate: 2025-11-08
+readingTimeMinutes: 5
+problem: >
+  A recurring compliance and certification process depended on a set of
+  financial and regulatory calculations that were done by hand and signed off
+  on paper. Paper sign-off meant slow turnaround, no searchable history, and
+  no way to spot a missing or overdue certification until someone went
+  looking for it. Calculation inputs and outputs lived in disconnected
+  spreadsheets, so reconstructing "what was approved, on what basis, and by
+  whom" for a past case was a manual archaeology exercise.
+constraints: >
+  The calculations themselves were sensitive and could not simply be moved
+  wholesale into a general-purpose tool without proper controls — outputs had
+  to remain fully auditable and traceable to their inputs. Approvers were
+  often not at a desk, so sign-off needed to work asynchronously. The
+  business could not tolerate a gap where a certification was neither
+  approved nor rejected but simply lost in an inbox.
+approach: >
+  I moved the calculation inputs and outputs into a structured database
+  schema so every case had a single, queryable record instead of a
+  spreadsheet copy. On top of that record I built an e-signature approval
+  step, so sign-off became a tracked, timestamped action against a specific
+  version of the calculation rather than an initialled paper form. A
+  dashboard surfaced outstanding, overdue, and completed certifications, so
+  a missing sign-off became visible immediately instead of being discovered
+  weeks later.
+architecture: >
+  A SQL Server schema models each certification case, its calculation inputs
+  and results, and its approval state as linked records. An e-signature step
+  captures the approver's identity, timestamp, and the exact version of the
+  calculation being signed off, which is never mutated after signing — a
+  correction creates a new version, not an edit. Power BI reads from the same
+  schema to give management a live view of what's outstanding, overdue, or
+  recently completed, replacing a manual status spreadsheet.
+outcome: >
+  Certification status became a live, queryable dashboard instead of a
+  question someone had to go and find the answer to. Every approved case has
+  a permanent, tamper-evident record of exactly what was signed off and by
+  whom, which stands up far better under audit than an initialled paper
+  form. Outstanding and overdue items are visible the day they become
+  overdue, not whenever someone happens to check.
+retrospective: >
+  The calculation logic itself was implemented ahead of a clean versioning
+  model, so early on a "correction" to a mistaken input could look
+  ambiguous in the history. If I were starting again I'd design the
+  version-every-change model first and build the calculation and approval
+  steps on top of it, rather than adding versioning once the gap became
+  obvious in practice.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  A[Case created\ninputs recorded] --> B[Calculation\nengine]
+  B --> C[Versioned result\nrecord]
+  C --> D[E-signature\napproval step]
+  D -->|signed| E[Certified\n+ timestamped]
+  D -->|rejected| F[Returned for\ncorrection to new version]
+  C --> G[Power BI\nstatus dashboard]`} />
+
+The specific calculation methods used in this domain are not described here —
+they are internal, compliance-sensitive business logic. What's shown is the
+general shape of the solution: moving a paper, spreadsheet-based approval
+process onto a structured, versioned, audit-friendly data model.

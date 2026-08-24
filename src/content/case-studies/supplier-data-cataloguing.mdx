@@ -1,0 +1,78 @@
+---
+title: "Large-Scale Data Extraction & Cataloguing"
+slug: "supplier-data-cataloguing"
+summary: >
+  A requests/BeautifulSoup/Selenium/pandas pipeline across 15+ supplier
+  sources, normalised into a single queryable catalogue feeding BI reporting.
+stack: ["Python", "BeautifulSoup", "Selenium", "Pandas", "Power BI"]
+featured: true
+draft: false
+publishDate: 2025-12-06
+readingTimeMinutes: 6
+problem: >
+  Product and pricing information needed for day-to-day work was spread
+  across more than fifteen supplier websites and portals, each with its own
+  layout, categorisation, and update cadence. Finding and comparing
+  information meant visiting sites individually and copying data out by
+  hand — slow, inconsistent, and quickly out of date.
+constraints: >
+  Every supplier site was structured differently, some rendered content
+  dynamically (requiring a real browser to see it at all), and none offered
+  a usable data export or API. The extraction approach had to be resilient
+  to sites changing their markup without warning, and had to avoid hammering
+  supplier sites aggressively enough to cause problems.
+approach: >
+  I built a Python pipeline that uses `requests` and BeautifulSoup for
+  straightforward static pages, and Selenium for sites that render content
+  dynamically, with per-source parsing logic isolated so a layout change on
+  one supplier's site doesn't break extraction from the rest. Every source's
+  extracted data is normalised into one common schema — same fields, same
+  units, same category taxonomy — and loaded into a queryable catalogue that
+  Power BI reads from directly.
+architecture: >
+  Each supplier source has its own small, isolated extraction module
+  (either requests+BeautifulSoup or Selenium, depending on what the site
+  needs) that outputs data in a common intermediate shape. A pandas-based
+  normalisation step maps every source's raw fields into one consistent
+  catalogue schema, resolving naming and unit differences between suppliers.
+  The normalised catalogue lands in a queryable store that Power BI
+  connects to directly, so reporting is always built on the same underlying
+  data regardless of which source it originally came from.
+outcome: >
+  Product and pricing information across all supplier sources became
+  queryable from one place instead of fifteen-plus separate manual lookups.
+  Because normalisation happens once, centrally, comparisons across
+  suppliers became straightforward instead of a manual, error-prone exercise
+  every time someone needed one.
+retrospective: >
+  I'd invest earlier in automated detection of source layout changes —
+  a lightweight check that flags when a supplier site's structure no longer
+  matches what the parser expects, rather than discovering it when a
+  scheduled run quietly returns incomplete data. Per-source isolation meant
+  a broken parser didn't take down the whole pipeline, but silent partial
+  failure on one source was still possible early on.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  subgraph Sources
+    S1[Supplier 1\nstatic HTML]
+    S2[Supplier 2\ndynamic JS]
+    S3[Supplier N...]
+  end
+  S1 --> P1[requests +\nBeautifulSoup]
+  S2 --> P2[Selenium]
+  S3 --> P3[per-source\nparser]
+  P1 --> N[Pandas\nnormalisation]
+  P2 --> N
+  P3 --> N
+  N --> C[(Unified\ncatalogue)]
+  C --> BI[Power BI\nreporting]`} />
+
+Isolating extraction logic per source — rather than one generic scraper trying
+to handle every layout — was the decision that made this maintainable: a
+single supplier changing their site breaks one small module, not the whole
+pipeline.

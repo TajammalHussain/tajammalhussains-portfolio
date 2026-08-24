@@ -1,0 +1,54 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+
+const stack = [
+  {
+    group: "This site",
+    items: [
+      "Astro 5 (static output)",
+      "Tailwind CSS v4",
+      "Cloudflare Pages",
+      "Cloudflare Workers (cron + API)",
+      "Cloudflare D1, R2, KV",
+      "Chart.js",
+      "Mermaid",
+    ],
+  },
+  {
+    group: "Data & pipelines",
+    items: ["Python", "SQL", "Pandas", "Azure Data Factory", "Power BI"],
+  },
+  {
+    group: "Editor & tooling",
+    items: ["VS Code", "Git / GitHub", "GitHub Actions", "Wrangler CLI"],
+  },
+];
+---
+
+<BaseLayout
+  title="Uses"
+  description="The stack and tooling behind this site and my day-to-day data engineering work."
+>
+  <h1 class="text-3xl font-semibold tracking-tight">Uses</h1>
+  <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
+    What this site itself runs on, and the tools I reach for day to day.
+  </p>
+  <div class="mt-10 space-y-8">
+    {
+      stack.map((s) => (
+        <div>
+          <h2 class="text-sm font-bold uppercase tracking-wide text-[var(--color-fg-muted)]">
+            {s.group}
+          </h2>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {s.items.map((item) => (
+              <li class="rounded-full border border-[var(--color-border)] px-3 py-1 text-sm">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+</BaseLayout>

@@ -1,0 +1,89 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { SITE } from "@/lib/site";
+import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
+---
+
+<BaseLayout
+  title="About"
+  description="Background, education, certifications, and career trajectory for Tajammal Hussain — Data Analyst progressing toward Data Engineer, based in Derby, UK."
+>
+  <div class="mx-auto max-w-3xl">
+    <h1 class="text-3xl font-semibold tracking-tight">About</h1>
+
+    <section class="mt-8">
+      <p class="text-lg text-[var(--color-fg-muted)]">
+        I'm a data-first, sector-agnostic engineer based in {SITE.location}. {TRAJECTORY}
+      </p>
+      <p class="mt-4 text-[var(--color-fg-muted)]">
+        My experience so far has been gained inside construction and building-services (MEP) —
+        a low-digital, paper-heavy environment where nothing arrives pre-cleaned and nobody is
+        waiting with a well-documented API. I present that as domain evidence, not identity:
+        delivering reliable data infrastructure inside a business that runs on spreadsheets and
+        paper trails demands the same stakeholder management, requirements extraction from
+        non-technical users, and pragmatic engineering under real constraints that any regulated
+        or legacy-heavy sector — fintech, retail, healthcare, the public sector — will ask for.
+      </p>
+    </section>
+
+    <section class="mt-12" aria-labelledby="education-heading">
+      <h2 id="education-heading" class="text-xl font-semibold">Education</h2>
+      <ul class="mt-4 space-y-4">
+        {
+          EDUCATION.map((e) => (
+            <li class="rounded-lg border border-[var(--color-border)] p-4">
+              <p class="font-medium">{e.qualification}</p>
+              <p class="text-sm text-[var(--color-fg-muted)]">
+                {e.institution} · {e.grade}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-12" aria-labelledby="certifications-heading">
+      <h2 id="certifications-heading" class="text-xl font-semibold">Certifications</h2>
+      <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+        {
+          CERTIFICATIONS.map((c) => (
+            <li class="rounded-lg border border-[var(--color-border)] p-4 text-sm">
+              <p class="font-medium">{c.name}</p>
+              <p class="text-[var(--color-fg-muted)]">
+                {c.issuer}
+                {c.detail && ` · ${c.detail}`}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="mt-12" aria-labelledby="skills-heading">
+      <h2 id="skills-heading" class="text-xl font-semibold">Skills</h2>
+      <dl class="mt-4 space-y-4">
+        {
+          SKILLS.map((s) => (
+            <div class="grid gap-1 sm:grid-cols-[140px_1fr] sm:items-baseline">
+              <dt class="text-sm font-medium text-[var(--color-fg-muted)]">{s.group}</dt>
+              <dd>{s.items.join(", ")}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="mt-12 flex flex-wrap gap-3">
+      <a
+        href="/cv"
+        class="rounded-md bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-fg)] hover:opacity-90"
+        >View full CV</a
+      >
+      <a
+        href={SITE.sameAs[1]}
+        class="rounded-md border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--color-accent)]"
+        >GitHub</a
+      >
+    </section>
+  </div>
+</BaseLayout>

@@ -1,0 +1,82 @@
+---
+title: "Multi-Level Approval Workflow Platform"
+slug: "approval-workflow-platform"
+summary: >
+  A configurable rules engine that resolves multi-level approval chains from
+  submitted form values, replacing a fixed, hardcoded sign-off process.
+stack: ["SQL Server", "Go", "React", "REST APIs", "Docker"]
+featured: true
+draft: false
+publishDate: 2025-11-01
+readingTimeMinutes: 6
+problem: >
+  Requests that needed sign-off from more than one person were routed by a
+  hardcoded sequence of approver roles. Every time the organisation's approval
+  structure changed — a new threshold, a new role in the chain, a different
+  path for a particular request type — it meant a code change and a
+  redeployment. The people who owned the approval policy could not change it
+  themselves, and the team shipping code changes had no domain context on
+  whether a rule change was even correct.
+constraints: >
+  The rules needed to support branching based on values submitted in the
+  request itself (who submitted it, what category it fell into, values above
+  or below a threshold), not just a static list of names. Existing requests
+  already in flight when a rule changed could not be silently reassigned or
+  lost. Non-technical staff needed to be able to inspect why a given request
+  was routed the way it was, without reading code or asking a developer.
+approach: >
+  Instead of encoding approval logic in application code, I modelled approval
+  chains as data: a set of rules, each with conditions and an ordered list of
+  approver roles, stored in the database and evaluated at submission time.
+  When a request comes in, the engine evaluates the active rule set against
+  the submitted values and resolves a concrete, ordered approval chain for
+  that specific request, which is then persisted alongside the request so it
+  never changes retroactively if the rules are edited later. Each step in the
+  chain triggers a notification to the current approver, and the system
+  automatically generates the relevant sign-off documents so nobody has to
+  assemble them by hand.
+architecture: >
+  A relational schema holds rule definitions (conditions + ordered approver
+  roles) separately from resolved chains (the concrete steps for one specific
+  request, frozen at creation time). A Go service exposes REST endpoints for
+  rule management, request submission, and approval actions; a React frontend
+  gives approvers a queue of pending items and gives request owners a status
+  view with full audit history. Every state transition — submitted, routed,
+  approved, rejected, escalated — is written to an append-only audit log.
+outcome: >
+  Approval routes could be changed by updating rule records through an admin
+  interface, with no code deployment required. Every request carries a full,
+  queryable audit trail of who approved what and when, which previously had
+  to be reconstructed manually from email threads when a dispute or an audit
+  came up. Non-technical staff could answer "why did this route to that
+  person" themselves by reading the resolved chain, instead of escalating the
+  question to engineering.
+retrospective: >
+  I'd introduce a rule simulation/dry-run mode earlier — the ability to test
+  a proposed rule change against a batch of historical requests and see how
+  routing would have differed, before making the change live. I'd also model
+  approver roles as a first-class, versioned entity from day one rather than
+  retrofitting versioning once roles started changing; the rules-as-data
+  approach was right, but rules refer to roles, and those needed the same
+  treatment.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  A[Request submitted] --> B{Rule engine\nevaluates conditions}
+  B --> C[Resolved approval chain\nfrozen at creation]
+  C --> D[Approver 1]
+  D -->|approve| E[Approver 2]
+  D -->|reject| F[Rejected + notified]
+  E -->|approve| G[Fully approved\ndocuments generated]
+  E -->|reject| F
+  C -.audit log.-> H[(Append-only\naudit trail)]`} />
+
+The core architectural decision here was treating approval rules as **data, not
+code**. A rules table with structured conditions can be edited by someone who
+owns the policy, queried, versioned, and tested against historical data — a
+hardcoded `if/else` chain in application code can only be changed by whoever
+can ship a deployment.

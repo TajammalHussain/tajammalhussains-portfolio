@@ -1,0 +1,35 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+const ventures = await getCollection("ventures");
+---
+
+<BaseLayout
+  title="Ventures"
+  description="Product and consulting work outside of full-time employment."
+>
+  <h1 class="text-3xl font-semibold tracking-tight">Ventures</h1>
+  <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
+    Portfolio and case studies come first on this site — the ventures below are mentioned
+    briefly, not sold.
+  </p>
+  <ul class="mt-10 space-y-4">
+    {
+      ventures.map((v) => (
+        <li class="rounded-lg border border-[var(--color-border)] p-6">
+          <div class="flex items-center justify-between">
+            <h2 class="font-semibold">{v.data.name}</h2>
+            <span class="rounded-full bg-[var(--color-bg-subtle)] px-2.5 py-1 text-xs capitalize text-[var(--color-fg-muted)]">
+              {v.data.status}
+            </span>
+          </div>
+          <p class="mt-2 text-sm text-[var(--color-fg-muted)]">{v.data.description}</p>
+          <a href={v.data.url} class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)] hover:underline">
+            Visit →
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</BaseLayout>

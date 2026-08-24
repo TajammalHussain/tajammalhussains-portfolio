@@ -1,0 +1,103 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import { getCollection, getEntry, type CollectionEntry } from "astro:content";
+import { SITE } from "@/lib/site";
+
+const settings = await getEntry("site-settings", "site");
+const allCaseStudies = await getCollection(
+  "case-studies",
+  (entry: CollectionEntry<"case-studies">) => !entry.data.draft,
+);
+const featured = allCaseStudies
+  .filter((cs) => cs.data.featured)
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf())
+  .slice(0, 3);
+
+const heroHeading = settings?.data.heroHeading ?? SITE.tagline;
+const heroBody = settings?.data.heroBody ?? SITE.description;
+---
+
+<BaseLayout title="Home">
+  <section class="flex flex-col gap-6 py-8 sm:py-16">
+    <p class="text-sm font-medium uppercase tracking-wide text-[var(--color-accent)]">
+      {SITE.jobTitle} · {SITE.location}
+    </p>
+    <h1 class="max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">
+      {heroHeading}
+    </h1>
+    <p class="max-w-xl text-lg text-[var(--color-fg-muted)]">
+      {heroBody}
+    </p>
+    <div class="flex flex-wrap gap-3 pt-2">
+      <a
+        href="/live"
+        class="rounded-md bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-fg)] transition-opacity hover:opacity-90"
+      >
+        See the live pipelines →
+      </a>
+      <a
+        href="/work"
+        class="rounded-md border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+      >
+        View case studies
+      </a>
+    </div>
+  </section>
+
+  <section aria-labelledby="live-teaser-heading" class="border-t border-[var(--color-border)] py-12">
+    <div class="flex items-baseline justify-between">
+      <h2 id="live-teaser-heading" class="text-xl font-semibold">Live right now</h2>
+      <a href="/live" class="text-sm font-medium text-[var(--color-accent)] hover:underline">
+        All pipelines →
+      </a>
+    </div>
+    <p class="mt-2 max-w-2xl text-[var(--color-fg-muted)]">
+      A scheduled Cloudflare Worker pulls UK grid carbon intensity every 30 minutes, lands it raw,
+      transforms it through a bronze → silver → gold pipeline, and serves it from a documented
+      public API. The chart below is real, not a screenshot.
+    </p>
+    <div
+      class="mt-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-6"
+    >
+      <p class="text-sm text-[var(--color-fg-muted)]">
+        Live carbon intensity widget renders here once Pipeline 1 is wired up (see
+        <code class="rounded bg-black/5 px-1 py-0.5 dark:bg-white/10">/live/carbon</code>).
+      </p>
+    </div>
+  </section>
+
+  {
+    featured.length > 0 && (
+      <section aria-labelledby="featured-work-heading" class="border-t border-[var(--color-border)] py-12">
+        <div class="flex items-baseline justify-between">
+          <h2 id="featured-work-heading" class="text-xl font-semibold">
+            Featured work
+          </h2>
+          <a href="/work" class="text-sm font-medium text-[var(--color-accent)] hover:underline">
+            All case studies →
+          </a>
+        </div>
+        <ul class="mt-6 grid gap-6 sm:grid-cols-2">
+          {featured.map((cs) => (
+            <li>
+              <a
+                href={`/work/${cs.slug}`}
+                class="block rounded-lg border border-[var(--color-border)] p-5 transition-colors hover:border-[var(--color-accent)]"
+              >
+                <h3 class="font-semibold">{cs.data.title}</h3>
+                <p class="mt-2 text-sm text-[var(--color-fg-muted)]">{cs.data.summary}</p>
+                <ul class="mt-3 flex flex-wrap gap-2">
+                  {cs.data.stack.slice(0, 4).map((tag) => (
+                    <li class="rounded-full bg-[var(--color-bg-subtle)] px-2.5 py-1 text-xs text-[var(--color-fg-muted)]">
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</BaseLayout>

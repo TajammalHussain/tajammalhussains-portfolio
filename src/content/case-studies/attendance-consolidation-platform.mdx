@@ -1,0 +1,67 @@
+---
+title: "Attendance Data Consolidation Platform"
+slug: "attendance-consolidation-platform"
+summary: >
+  A Go backend and responsive frontend consolidating fragmented attendance
+  logs from multiple sources into a single, live source of truth.
+stack: ["Go", "PostgreSQL", "React", "REST APIs"]
+featured: false
+draft: false
+publishDate: 2025-11-22
+readingTimeMinutes: 5
+problem: >
+  Attendance information existed in several disconnected places — different
+  sites kept their own logs, in different formats, updated on different
+  schedules. Getting a single answer to "who was on site, where, and when"
+  meant manually collecting and reconciling several separate sources, and the
+  answer was already out of date by the time it was assembled.
+constraints: >
+  The existing per-site logging habits couldn't be ripped out overnight —
+  people needed a low-friction way to keep logging the way they already did,
+  while the data itself got consolidated centrally. Management needed a
+  single live view, but site-level staff needed their own site's data to
+  stay simple and familiar rather than being handed a complex new system.
+approach: >
+  I built a Go backend with a small set of well-defined ingestion endpoints
+  that each site's existing logging habit could feed into with minimal
+  change, and a central Postgres schema that normalised every source into one
+  consistent attendance record shape. A responsive React frontend gave
+  management a single live dashboard across every site, while preserving a
+  simple site-level view for the people actually doing the logging.
+architecture: >
+  Each site's log source is normalised at ingestion time into a common
+  attendance-record schema (person, site, timestamp, event type) rather than
+  storing each source's native format and reconciling at query time. The Go
+  backend exposes REST endpoints for both ingestion and read access; the
+  frontend consumes the same read API for both the management overview and
+  the per-site drill-down, so there is exactly one source of truth being
+  rendered two different ways.
+outcome: >
+  Management gained a single, live, cross-site view instead of a manually
+  reconciled report that was always somewhat out of date. Site-level staff
+  kept a workflow close to what they already knew, which meant adoption
+  didn't depend on retraining everyone at once.
+retrospective: >
+  Normalising at ingestion time was the right call, but I'd invest earlier in
+  a clear reconciliation/conflict story for the (rare but real) cases where
+  two sources disagreed about the same person at the same time — early on
+  this was resolved ad hoc rather than by an explicit, documented rule.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram chart={`flowchart LR
+  A[Site A log] --> N[Normalisation\nat ingestion]
+  B[Site B log] --> N
+  C[Site C log] --> N
+  N --> D[(Central Postgres\nattendance records)]
+  D --> E[Go REST API]
+  E --> F[Management\noverview]
+  E --> G[Per-site\ndrill-down]`} />
+
+The core idea: normalise once, at the point data enters the system, so every
+downstream consumer — the management dashboard, the per-site view, any future
+report — reads from one consistent shape instead of re-interpreting several
+different source formats every time.

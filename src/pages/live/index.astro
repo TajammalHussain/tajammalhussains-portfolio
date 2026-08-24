@@ -1,0 +1,21 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Live Data"
+  description="Real, running data pipelines — scheduled ingestion, a bronze/silver/gold transform, monitored data quality, and a documented public API."
+>
+  <h1 class="text-3xl font-semibold tracking-tight">Live Data</h1>
+  <p class="mt-3 max-w-2xl text-[var(--color-fg-muted)]">
+    This page will show real, currently-running pipelines — not mockups. It intentionally does
+    not claim anything is live until the underlying Worker, D1 tables, and scheduled ingestion
+    are actually deployed and verified.
+  </p>
+  <div class="mt-10 rounded-lg border border-dashed border-[var(--color-border)] p-8 text-center text-[var(--color-fg-muted)]">
+    <p class="font-medium">Pipeline build in progress.</p>
+    <p class="mt-2 text-sm">
+      Check back shortly, or follow along in the <a href={`${"https://github.com/TajammalHussain"}`} class="text-[var(--color-accent)] hover:underline">GitHub repository</a>.
+    </p>
+  </div>
+</BaseLayout>
