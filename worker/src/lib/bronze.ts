@@ -81,5 +81,11 @@ function buildBronzeKey(pipeline: string, kind: string, when: Date): string {
   const hh = String(when.getUTCHours()).padStart(2, "0");
   const min = String(when.getUTCMinutes()).padStart(2, "0");
   const ss = String(when.getUTCSeconds()).padStart(2, "0");
-  return `bronze/${pipeline}/${yyyy}/${mm}/${dd}/${hh}${min}${ss}-${kind}.json`;
+  const ms = String(when.getUTCMilliseconds()).padStart(3, "0");
+  // A short random suffix, on top of millisecond precision, guarantees a
+  // unique r2_key (UNIQUE in D1) even for two ingestions landing within the
+  // same millisecond — e.g. a manual re-run fired immediately after a cron
+  // tick, or two pipelines' bronze writes racing each other under test.
+  const rand = Math.random().toString(36).slice(2, 8);
+  return `bronze/${pipeline}/${yyyy}/${mm}/${dd}/${hh}${min}${ss}${ms}-${rand}-${kind}.json`;
 }
