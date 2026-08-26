@@ -31,7 +31,14 @@ export async function upsertCarbonReadings(
       ingested_at = datetime('now')
   `);
   const batch = rows.map((r) =>
-    stmt.bind(r.periodFrom, r.periodTo, r.actualIntensity, r.forecastIntensity, r.indexBand, bronzeId),
+    stmt.bind(
+      r.periodFrom,
+      r.periodTo,
+      r.actualIntensity,
+      r.forecastIntensity,
+      r.indexBand,
+      bronzeId,
+    ),
   );
   await env.DB.batch(batch);
   return rows.length;
@@ -50,12 +57,17 @@ export async function upsertGenerationMix(
       percentage = excluded.percentage,
       source_bronze_id = excluded.source_bronze_id
   `);
-  const batch = rows.map((r) => stmt.bind(r.periodFrom, r.fuelType, r.percentage, bronzeId));
+  const batch = rows.map((r) =>
+    stmt.bind(r.periodFrom, r.fuelType, r.percentage, bronzeId),
+  );
   await env.DB.batch(batch);
   return rows.length;
 }
 
-export async function upsertDailyGold(env: Env, rows: CarbonDailyGoldRow[]): Promise<number> {
+export async function upsertDailyGold(
+  env: Env,
+  rows: CarbonDailyGoldRow[],
+): Promise<number> {
   if (rows.length === 0) return 0;
   const stmt = env.DB.prepare(`
     INSERT INTO carbon_daily_gold
@@ -90,7 +102,10 @@ export async function upsertDailyGold(env: Env, rows: CarbonDailyGoldRow[]): Pro
   return rows.length;
 }
 
-export async function upsertFuelMixGold(env: Env, rows: FuelMixGoldRow[]): Promise<number> {
+export async function upsertFuelMixGold(
+  env: Env,
+  rows: FuelMixGoldRow[],
+): Promise<number> {
   if (rows.length === 0) return 0;
   const stmt = env.DB.prepare(`
     INSERT INTO carbon_fuel_mix_gold (date, fuel_type, avg_share, computed_at)

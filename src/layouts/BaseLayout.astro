@@ -1,7 +1,6 @@
 ---
 import Nav from "@/components/Nav.astro";
 import Footer from "@/components/Footer.astro";
-import MermaidRuntime from "@/components/MermaidRuntime.astro";
 import { SITE } from "@/lib/site";
 import "@/styles/global.css";
 
@@ -61,15 +60,15 @@ const personSchema = {
     <script is:inline>
       (function () {
         try {
-          var stored = localStorage.getItem("theme");
-          var theme =
+          const stored = localStorage.getItem("theme");
+          const theme =
             stored === "light" || stored === "dark"
               ? stored
               : window.matchMedia("(prefers-color-scheme: dark)").matches
                 ? "dark"
                 : "light";
           document.documentElement.dataset.theme = theme;
-        } catch (e) {
+        } catch {
           /* localStorage unavailable — default light styles still apply */
         }
       })();
@@ -137,6 +136,5 @@ const personSchema = {
       <slot />
     </main>
     <Footer />
-    <MermaidRuntime />
   </body>
 </html>

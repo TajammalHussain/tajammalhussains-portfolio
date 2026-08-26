@@ -1,0 +1,8 @@
+{
+  "format": "linked-data-api",
+  "version": "0.2",
+  "result": {
+    "_about": "http://landregistry.data.gov.uk/data/ukhpi/region/united-kingdom/month/2099-01.json",
+    "primaryTopic": "elda:missingEndpoint"
+  }
+}

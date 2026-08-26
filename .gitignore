@@ -12,6 +12,10 @@ dist/
 .astro/
 worker/dist/
 
+# Generated at build time by scripts/generate-og-images.mjs — deterministic
+# from content + branding, regenerated on every build rather than committed.
+public/og/**/*.png
+
 # Cloudflare / Wrangler
 .wrangler/
 .dev.vars

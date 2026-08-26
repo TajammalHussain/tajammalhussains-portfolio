@@ -65,7 +65,8 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   A[Request submitted] --> B{Rule engine\nevaluates conditions}
   B --> C[Resolved approval chain\nfrozen at creation]
   C --> D[Approver 1]
@@ -73,7 +74,8 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
   D -->|reject| F[Rejected + notified]
   E -->|approve| G[Fully approved\ndocuments generated]
   E -->|reject| F
-  C -.audit log.-> H[(Append-only\naudit trail)]`} />
+  C -.audit log.-> H[(Append-only\naudit trail)]`}
+/>
 
 The core architectural decision here was treating approval rules as **data, not
 code**. A rules table with structured conditions can be edited by someone who

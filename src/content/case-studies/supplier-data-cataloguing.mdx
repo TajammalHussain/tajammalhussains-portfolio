@@ -57,7 +57,8 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   subgraph Sources
     S1[Supplier 1\nstatic HTML]
     S2[Supplier 2\ndynamic JS]
@@ -70,7 +71,8 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
   P2 --> N
   P3 --> N
   N --> C[(Unified\ncatalogue)]
-  C --> BI[Power BI\nreporting]`} />
+  C --> BI[Power BI\nreporting]`}
+/>
 
 Isolating extraction logic per source — rather than one generic scraper trying
 to handle every layout — was the decision that made this maintainable: a

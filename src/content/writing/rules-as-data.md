@@ -45,5 +45,5 @@ database table that's harder to review than code ever was.
 Not every conditional belongs in a rules table. If a piece of logic changes
 on the same cadence as the rest of the codebase, and only developers ever
 need to change it, a table adds indirection for no real benefit. The signal
-worth watching for is specifically a *mismatch in cadence* — policy that
+worth watching for is specifically a _mismatch in cadence_ — policy that
 changes faster than code should.

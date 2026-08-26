@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { computeDailyGold, computeFuelMixGold } from "@worker/pipelines/carbon/aggregate";
+import {
+  computeDailyGold,
+  computeFuelMixGold,
+} from "@worker/pipelines/carbon/aggregate";
 import { transformIntensityToSilver } from "@worker/pipelines/carbon/transform";
 import intensityDay from "../fixtures/carbon-intensity-day.json";
 import type { GenerationMixSilverRow } from "@worker/pipelines/carbon/types";
@@ -47,7 +50,13 @@ describe("computeDailyGold", () => {
   it("splits readings across two different dates into two gold rows", () => {
     const twoDayRows = [
       ...rows,
-      { periodFrom: "2026-01-02T00:00Z", periodTo: "2026-01-02T00:30Z", actualIntensity: 100, forecastIntensity: 100, indexBand: "moderate" },
+      {
+        periodFrom: "2026-01-02T00:00Z",
+        periodTo: "2026-01-02T00:30Z",
+        actualIntensity: 100,
+        forecastIntensity: 100,
+        indexBand: "moderate",
+      },
     ];
     const gold = computeDailyGold(twoDayRows);
     expect(gold.map((g) => g.date)).toEqual(["2026-01-01", "2026-01-02"]);
@@ -55,7 +64,13 @@ describe("computeDailyGold", () => {
 
   it("reports null aggregates (not zero) for a date with no actuals at all", () => {
     const onlyForecast = [
-      { periodFrom: "2026-02-01T00:00Z", periodTo: "2026-02-01T00:30Z", actualIntensity: null, forecastIntensity: 50, indexBand: "moderate" },
+      {
+        periodFrom: "2026-02-01T00:00Z",
+        periodTo: "2026-02-01T00:30Z",
+        actualIntensity: null,
+        forecastIntensity: 50,
+        indexBand: "moderate",
+      },
     ];
     const gold = computeDailyGold(onlyForecast);
     expect(gold[0].avgActualIntensity).toBeNull();
@@ -72,8 +87,16 @@ describe("computeFuelMixGold", () => {
       { periodFrom: "2026-01-01T00:00Z", fuelType: "gas", percentage: 10 },
     ];
     const gold = computeFuelMixGold(rows);
-    expect(gold).toContainEqual({ date: "2026-01-01", fuelType: "wind", avgShare: 25 });
-    expect(gold).toContainEqual({ date: "2026-01-01", fuelType: "gas", avgShare: 10 });
+    expect(gold).toContainEqual({
+      date: "2026-01-01",
+      fuelType: "wind",
+      avgShare: 25,
+    });
+    expect(gold).toContainEqual({
+      date: "2026-01-01",
+      fuelType: "gas",
+      avgShare: 10,
+    });
   });
 
   it("returns an empty array for empty input", () => {

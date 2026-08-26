@@ -18,7 +18,13 @@ export interface BronzeLandResult {
  */
 export async function fetchAndLandBronze(
   env: Env,
-  params: { pipeline: string; kind: string; url: string; periodStart?: string; periodEnd?: string },
+  params: {
+    pipeline: string;
+    kind: string;
+    url: string;
+    periodStart?: string;
+    periodEnd?: string;
+  },
 ): Promise<BronzeLandResult> {
   const { pipeline, kind, url, periodStart, periodEnd } = params;
   const now = new Date();
@@ -56,7 +62,55 @@ export async function fetchAndLandBronze(
     .run();
 
   const bronzeId = insert.meta.last_row_id;
-  logger.info("bronze landed", { pipeline, r2Key, bronzeId, byteSize: bodyText.length });
+  logger.info("bronze landed", {
+    pipeline,
+    r2Key,
+    bronzeId,
+    byteSize: bodyText.length,
+  });
+
+  return { bronzeId, r2Key, byteSize: bodyText.length };
+}
+
+/**
+ * Lands an already-in-hand payload as bronze, without fetching it from a
+ * URL first. For the site meta-pipeline, whose "source" is this Worker's own
+ * D1 state (a computed snapshot) or an externally-posted deploy/build event
+ * — not a third-party HTTP API — bronze is still the same immutable,
+ * R2-backed landing zone, just without the fetch step.
+ */
+export async function landBronzeObject(
+  env: Env,
+  params: {
+    pipeline: string;
+    kind: string;
+    payload: unknown;
+    sourceUrl: string;
+  },
+): Promise<BronzeLandResult> {
+  const { pipeline, kind, payload, sourceUrl } = params;
+  const now = new Date();
+  const bodyText = JSON.stringify(payload);
+  const r2Key = buildBronzeKey(pipeline, kind, now);
+
+  await env.BRONZE_BUCKET.put(r2Key, bodyText, {
+    httpMetadata: { contentType: "application/json" },
+  });
+
+  const insert = await env.DB.prepare(
+    `INSERT INTO bronze_ingestion_log (pipeline, r2_key, source_url, http_status, byte_size, fetched_at)
+     VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
+  )
+    .bind(pipeline, r2Key, sourceUrl, 200, bodyText.length, now.toISOString())
+    .run();
+
+  const bronzeId = insert.meta.last_row_id;
+  logger.info("bronze landed", {
+    pipeline,
+    r2Key,
+    bronzeId,
+    byteSize: bodyText.length,
+  });
 
   return { bronzeId, r2Key, byteSize: bodyText.length };
 }
@@ -68,8 +122,13 @@ export async function readBronzeJson<T>(env: Env, r2Key: string): Promise<T> {
   return obj.json<T>();
 }
 
-export async function markBronzeProcessed(env: Env, bronzeId: number): Promise<void> {
-  await env.DB.prepare(`UPDATE bronze_ingestion_log SET processed_at = ?1 WHERE id = ?2`)
+export async function markBronzeProcessed(
+  env: Env,
+  bronzeId: number,
+): Promise<void> {
+  await env.DB.prepare(
+    `UPDATE bronze_ingestion_log SET processed_at = ?1 WHERE id = ?2`,
+  )
     .bind(new Date().toISOString(), bronzeId)
     .run();
 }

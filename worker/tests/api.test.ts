@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect } from "vitest";
 import { env, SELF } from "cloudflare:test";
 
 describe("GET /api/v1/health", () => {
@@ -32,7 +32,9 @@ describe("GET /api/v1/carbon/current", () => {
 
     const res = await SELF.fetch("https://example.com/api/v1/carbon/current");
     expect(res.status).toBe(200);
-    const body = await res.json<{ data: { actualIntensity: number; indexBand: string } }>();
+    const body = await res.json<{
+      data: { actualIntensity: number; indexBand: string };
+    }>();
     expect(body.data.actualIntensity).toBe(61);
     expect(body.data.indexBand).toBe("low");
   });
@@ -82,7 +84,11 @@ describe("GET /api/v1/pipelines/status", () => {
     const res = await SELF.fetch("https://example.com/api/v1/pipelines/status");
     expect(res.status).toBe(200);
     const body = await res.json<{ data: Array<{ pipeline: string }> }>();
-    expect(body.data.map((p) => p.pipeline).sort()).toEqual(["carbon", "housing", "meta"]);
+    expect(body.data.map((p) => p.pipeline).sort()).toEqual([
+      "carbon",
+      "housing",
+      "meta",
+    ]);
   });
 });
 
@@ -98,12 +104,16 @@ describe("unknown routes and methods", () => {
   });
 
   it("rejects non-GET methods with 405 (every current route is read-only)", async () => {
-    const res = await SELF.fetch("https://example.com/api/v1/health", { method: "POST" });
+    const res = await SELF.fetch("https://example.com/api/v1/health", {
+      method: "POST",
+    });
     expect(res.status).toBe(405);
   });
 
   it("responds to an OPTIONS preflight with CORS headers", async () => {
-    const res = await SELF.fetch("https://example.com/api/v1/health", { method: "OPTIONS" });
+    const res = await SELF.fetch("https://example.com/api/v1/health", {
+      method: "OPTIONS",
+    });
     expect(res.status).toBe(204);
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
   });
@@ -115,7 +125,9 @@ describe("rate limiting", () => {
     let lastStatus = 200;
     // Limit is 60/min — 65 requests from the same IP should trip it.
     for (let i = 0; i < 65; i++) {
-      const res = await SELF.fetch("https://example.com/api/v1/health", { headers });
+      const res = await SELF.fetch("https://example.com/api/v1/health", {
+        headers,
+      });
       lastStatus = res.status;
     }
     expect(lastStatus).toBe(429);

@@ -1,0 +1,75 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+import MetaLiveWidget from "@/components/MetaLiveWidget.astro";
+---
+
+<BaseLayout
+  title="Site Meta-Pipeline — Live Pipeline"
+  description="A self-referential Cloudflare Worker pipeline that ingests this site's own operational state daily, plus real deploy and build events reported by CI."
+>
+  <div class="mx-auto max-w-3xl">
+    <a href="/live" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
+      >← All pipelines</a
+    >
+    <h1 class="mt-4 text-3xl font-semibold tracking-tight">Site Meta-Pipeline</h1>
+    <p class="mt-3 text-lg text-[var(--color-fg-muted)]">
+      This pipeline's "source API" is this site's own database: once a day it takes a snapshot of
+      every other pipeline's run history, recent data-quality failures, and admin activity — the
+      same bronze → silver medallion pattern as Pipelines 1 and 2, applied to the site itself.
+    </p>
+
+    <MetaLiveWidget />
+
+    <section class="mt-12">
+      <h2 class="text-xl font-semibold">Architecture</h2>
+      <MermaidDiagram
+        chart={`flowchart LR
+  A[This Worker's own D1 state] -->|daily\ncron trigger| B[Bronze\nsnapshot JSON to R2]
+  B --> C[Silver\nsite_events_silver]
+  D[GitHub Actions\nafter a real deploy] -->|bearer-secret webhook| C
+  C --> E[Public API\n/api/v1/meta/events]
+  E --> F[This page]
+  C -.-> Q[Data quality checks\nfreshness, completeness,\nvalidity, uniqueness, referential]`}
+      />
+    </section>
+
+    <section class="mt-10 grid gap-6 sm:grid-cols-2">
+      <div class="rounded-lg border border-[var(--color-border)] p-5">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+          Schedule
+        </h3>
+        <p class="mt-2">Daily, 05:00 UTC (<code>0 5 * * *</code>), plus real-time on every deploy</p>
+      </div>
+      <div class="rounded-lg border border-[var(--color-border)] p-5">
+        <h3 class="text-sm font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">
+          Source code
+        </h3>
+        <p class="mt-2">
+          <a
+            href="https://github.com/TajammalHussain/tajammalhussains-portfolio/tree/main/worker/src/pipelines/meta"
+            class="text-[var(--color-accent)] hover:underline"
+          >
+            worker/src/pipelines/meta on GitHub →
+          </a>
+        </p>
+      </div>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">Why no fabricated deploy history</h2>
+      <p class="mt-2 text-[var(--color-fg-muted)]">
+        Deploy and build events only appear here once GitHub Actions actually reports one after a
+        real deploy — a day with no deploy has no deploy event, not a placeholder. The daily
+        analytics snapshot is the only event type that runs on a schedule.
+      </p>
+    </section>
+
+    <section class="mt-10">
+      <h2 class="text-xl font-semibold">Data quality &amp; pipeline runs</h2>
+      <p class="mt-2 text-[var(--color-fg-muted)]">
+        Full check history and run log: see <a href="/status" class="text-[var(--color-accent)] underline underline-offset-2">/status</a>.
+      </p>
+    </section>
+  </div>
+</BaseLayout>

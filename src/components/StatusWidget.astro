@@ -2,7 +2,7 @@
 const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
 ---
 
-<div id="status-widget" data-api-base={apiBase}>
+<div id="status-widget" data-api-base={apiBase} style="min-height: 950px">
   <div id="status-loading" class="text-sm text-[var(--color-fg-muted)]">Loading pipeline status…</div>
   <div id="status-error" class="hidden text-sm text-[var(--color-danger)]"></div>
   <div id="status-content" class="hidden space-y-6"></div>
@@ -78,7 +78,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
           return `
             <div class="rounded-lg border border-[var(--color-border)] p-5">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <h3 class="font-semibold">${label}</h3>
+                <h2 class="font-semibold">${label}</h2>
                 <div class="flex items-center gap-2">
                   ${p.paused ? '<span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-950 dark:text-amber-300">paused</span>' : ""}
                   ${statusBadge(runStatus as "pass" | "fail" | "success" | "failed" | "running")}

@@ -51,12 +51,14 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   A[Scheduled job\ntriggers] --> B[Read tracking\ndata]
   B --> C[Compute\nthreshold status]
   C --> D{Approaching or\npast threshold?}
   D -->|yes, not recently alerted| E[Send SMTP\nalert to owner]
-  D -->|no| F[No action]`} />
+  D -->|no| F[No action]`}
+/>
 
 The important shift here is from **pull** (someone has to remember to check)
 to **push** (the system tells you, on a schedule, without being asked) — a

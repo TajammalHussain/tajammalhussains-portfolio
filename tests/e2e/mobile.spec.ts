@@ -7,7 +7,9 @@ import { test, expect, devices } from "@playwright/test";
 test.use({ ...devices["Galaxy S9+"] });
 
 test.describe("Mobile viewport", () => {
-  test("nav collapses behind a hamburger toggle and expands on tap", async ({ page }) => {
+  test("nav collapses behind a hamburger toggle and expands on tap", async ({
+    page,
+  }) => {
     await page.goto("/");
     const navLinks = page.locator("#nav-links");
     await expect(navLinks).toBeHidden();
@@ -19,10 +21,14 @@ test.describe("Mobile viewport", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "true");
   });
 
-  test("homepage content is usable without horizontal scrolling", async ({ page }) => {
+  test("homepage content is usable without horizontal scrolling", async ({
+    page,
+  }) => {
     await page.goto("/");
     const hasHorizontalScroll = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
     );
     expect(hasHorizontalScroll).toBe(false);
   });
@@ -33,7 +39,9 @@ test.describe("Mobile viewport", () => {
     await page.goto("/work/approval-workflow-platform");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const hasHorizontalScroll = await page.evaluate(
-      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      () =>
+        document.documentElement.scrollWidth >
+        document.documentElement.clientWidth,
     );
     expect(hasHorizontalScroll).toBe(false);
   });

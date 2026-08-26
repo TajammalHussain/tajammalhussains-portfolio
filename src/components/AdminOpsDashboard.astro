@@ -1,0 +1,486 @@
+---
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
+---
+
+<div id="ops-dashboard" data-api-base={apiBase}>
+  <div id="ops-loading" class="text-sm text-[var(--color-fg-muted)]">Checking access…</div>
+  <div id="ops-error" class="hidden rounded-lg border border-[var(--color-danger)] p-4 text-sm text-[var(--color-danger)]"></div>
+
+  <div id="ops-content" class="hidden space-y-10">
+    <div class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-[var(--color-border)] p-4 text-sm">
+      <span>Signed in as <strong id="ops-whoami">—</strong></span>
+      <button
+        id="ops-refresh"
+        type="button"
+        class="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-bg-subtle)]"
+      >
+        Refresh
+      </button>
+    </div>
+
+    <section aria-labelledby="ops-pipelines-heading">
+      <h2 id="ops-pipelines-heading" class="text-xl font-semibold">Pipeline control</h2>
+      <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
+        Pause/resume a pipeline's cron trigger, or run one on demand — same code path as the
+        scheduled run, just with <code>trigger_type = 'manual'</code>.
+      </p>
+      <div id="ops-pipelines" class="mt-4 space-y-4"></div>
+    </section>
+
+    <section aria-labelledby="ops-quality-heading">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="ops-quality-heading" class="text-xl font-semibold">Data quality history</h2>
+        <select id="ops-quality-filter" aria-label="Filter data quality history by pipeline" class="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm">
+          <option value="">All pipelines</option>
+          <option value="carbon">Carbon</option>
+          <option value="housing">Housing</option>
+          <option value="meta">Meta</option>
+        </select>
+      </div>
+      <div class="mt-4 overflow-x-auto" tabindex="0" role="region" aria-label="Data quality check history">
+        <table class="w-full min-w-[640px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] text-left text-xs uppercase text-[var(--color-fg-muted)]">
+              <th class="py-2 pr-4">Pipeline</th>
+              <th class="py-2 pr-4">Layer</th>
+              <th class="py-2 pr-4">Check</th>
+              <th class="py-2 pr-4">Status</th>
+              <th class="py-2 pr-4">Observed / Expected</th>
+              <th class="py-2 pr-4">Run at</th>
+            </tr>
+          </thead>
+          <tbody id="ops-quality-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="ops-bronze-heading">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="ops-bronze-heading" class="text-xl font-semibold">Bronze ingestion log</h2>
+        <select id="ops-bronze-filter" aria-label="Filter bronze ingestion log by pipeline" class="rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm">
+          <option value="">All pipelines</option>
+          <option value="carbon">Carbon</option>
+          <option value="housing">Housing</option>
+          <option value="meta">Meta</option>
+        </select>
+      </div>
+      <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
+        Every raw payload landed from a source API, before any transform runs. "View payload" reads
+        the actual JSON back from R2.
+      </p>
+      <div class="mt-4 overflow-x-auto" tabindex="0" role="region" aria-label="Bronze ingestion log">
+        <table class="w-full min-w-[720px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] text-left text-xs uppercase text-[var(--color-fg-muted)]">
+              <th class="py-2 pr-4">ID</th>
+              <th class="py-2 pr-4">Pipeline</th>
+              <th class="py-2 pr-4">R2 key</th>
+              <th class="py-2 pr-4">HTTP</th>
+              <th class="py-2 pr-4">Bytes</th>
+              <th class="py-2 pr-4">Fetched at</th>
+              <th class="py-2 pr-4">Processed</th>
+              <th class="py-2 pr-4"></th>
+            </tr>
+          </thead>
+          <tbody id="ops-bronze-rows"></tbody>
+        </table>
+      </div>
+      <pre
+        id="ops-bronze-payload"
+        tabindex="0"
+        role="region"
+        aria-label="Selected bronze payload"
+        class="mt-4 hidden max-h-96 overflow-auto rounded-md bg-[var(--color-bg-subtle)] p-3 text-xs"
+      ></pre>
+    </section>
+
+    <section aria-labelledby="ops-audit-heading">
+      <h2 id="ops-audit-heading" class="text-xl font-semibold">Audit log</h2>
+      <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
+        Immutable record of every admin action taken from this dashboard — who, what, when, and
+        whether it succeeded. There is no delete or edit path for this table anywhere in the
+        codebase.
+      </p>
+      <div class="mt-4 overflow-x-auto" tabindex="0" role="region" aria-label="Admin audit log">
+        <table class="w-full min-w-[640px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-[var(--color-border)] text-left text-xs uppercase text-[var(--color-fg-muted)]">
+              <th class="py-2 pr-4">When</th>
+              <th class="py-2 pr-4">Actor</th>
+              <th class="py-2 pr-4">Action</th>
+              <th class="py-2 pr-4">Target</th>
+              <th class="py-2 pr-4">Result</th>
+            </tr>
+          </thead>
+          <tbody id="ops-audit-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+  interface PipelineRun {
+    id: number;
+    trigger_type: string;
+    status: string;
+    started_at: string;
+    finished_at: string | null;
+    rows_bronze: number | null;
+    rows_silver: number | null;
+    rows_gold: number | null;
+    error_detail: string | null;
+  }
+  interface QualityCheck {
+    pipeline?: string;
+    layer: string;
+    check_name: string;
+    status: "pass" | "fail";
+    observed_value: string | null;
+    expected_value: string | null;
+    detail: string | null;
+    run_at: string;
+  }
+  interface PipelineDetail {
+    pipeline: string;
+    paused: boolean;
+    stalenessThresholdMinutes: number;
+    minExpectedRowsPerRun: number;
+    visibleOnLivePage: boolean;
+    implemented: boolean;
+    recentRuns: PipelineRun[];
+    latestQualityChecks: QualityCheck[];
+  }
+  interface BronzeRow {
+    id: number;
+    pipeline: string;
+    r2_key: string;
+    source_url: string;
+    http_status: number | null;
+    byte_size: number | null;
+    fetched_at: string;
+    period_start: string | null;
+    period_end: string | null;
+    processed_at: string | null;
+  }
+  interface AuditRow {
+    id: number;
+    actor_email: string;
+    action: string;
+    target: string | null;
+    params_json: string | null;
+    result: "success" | "error";
+    detail: string | null;
+    created_at: string;
+  }
+
+  // renderPipelines() rebuilds the whole pipeline-cards section from scratch
+  // (simplest way to reflect a fresh fetch), which would otherwise wipe out
+  // an in-progress "Run now" result message the instant it's set. Keeping
+  // the last message per pipeline here lets each re-render restore it, and a
+  // timeout clears it a few seconds later.
+  const runResultMessages = new Map<string, string>();
+
+  const PIPELINE_LABELS: Record<string, string> = {
+    carbon: "UK Grid Carbon Intensity",
+    housing: "UK House Price Data",
+    meta: "Site Meta-Pipeline",
+  };
+
+  function fmtDate(s: string | null): string {
+    if (!s) return "—";
+    return new Date(s.includes("T") ? s : s.replace(" ", "T") + "Z").toLocaleString("en-GB");
+  }
+
+  function badge(text: string, tone: "pass" | "fail" | "neutral" | "running"): string {
+    const cls =
+      tone === "pass"
+        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+        : tone === "fail"
+          ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+          : tone === "running"
+            ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+            : "bg-[var(--color-bg-subtle)] text-[var(--color-fg-muted)]";
+    return `<span class="rounded-full px-2.5 py-1 text-xs font-semibold ${cls}">${text}</span>`;
+  }
+
+  async function initOpsDashboard() {
+    const root = document.getElementById("ops-dashboard");
+    if (!root) return;
+    const apiBase = root.dataset.apiBase ?? "";
+    const loadingEl = document.getElementById("ops-loading")!;
+    const errorEl = document.getElementById("ops-error")!;
+    const contentEl = document.getElementById("ops-content")!;
+    const whoamiEl = document.getElementById("ops-whoami")!;
+    const pipelinesEl = document.getElementById("ops-pipelines")!;
+    const qualityRowsEl = document.getElementById("ops-quality-rows")!;
+    const qualityFilterEl = document.getElementById("ops-quality-filter") as HTMLSelectElement;
+    const bronzeRowsEl = document.getElementById("ops-bronze-rows")!;
+    const bronzeFilterEl = document.getElementById("ops-bronze-filter") as HTMLSelectElement;
+    const bronzePayloadEl = document.getElementById("ops-bronze-payload")!;
+    const auditRowsEl = document.getElementById("ops-audit-rows")!;
+
+    async function adminFetch(path: string, init: RequestInit = {}) {
+      const res = await fetch(`${apiBase}${path}`, { ...init, credentials: "include" });
+      if (res.status === 401) throw new Error("unauthorized — Cloudflare Access did not authenticate this session");
+      if (!res.ok) throw new Error(`${path} returned ${res.status}`);
+      return res.json();
+    }
+
+    async function renderPipelines() {
+      const { data }: { data: PipelineDetail[] } = await adminFetch("/api/admin/pipelines");
+      pipelinesEl.innerHTML = data
+        .map((p) => {
+          const lastRun = p.recentRuns[0] ?? null;
+          const runsHtml = p.recentRuns.length
+            ? `<ul class="mt-3 space-y-1 text-xs text-[var(--color-fg-muted)]">${p.recentRuns
+                .slice(0, 5)
+                .map(
+                  (r) =>
+                    `<li>${fmtDate(r.started_at)} — ${r.trigger_type} — ${r.status}${r.error_detail ? ` — <span class="text-[var(--color-danger)]">${r.error_detail}</span>` : ""}</li>`,
+                )
+                .join("")}</ul>`
+            : `<p class="mt-3 text-xs text-[var(--color-fg-muted)]">No runs yet.</p>`;
+
+          return `
+          <div class="rounded-lg border border-[var(--color-border)] p-5" data-pipeline="${p.pipeline}">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-semibold">${PIPELINE_LABELS[p.pipeline] ?? p.pipeline}</h3>
+              <div class="flex items-center gap-2">
+                ${p.paused ? badge("paused", "neutral") : badge("active", "pass")}
+                ${lastRun ? badge(lastRun.status, lastRun.status === "success" ? "pass" : lastRun.status === "running" ? "running" : "fail") : badge("never run", "neutral")}
+              </div>
+            </div>
+            <dl class="mt-3 grid grid-cols-2 gap-2 text-xs text-[var(--color-fg-muted)] sm:grid-cols-4">
+              <div><dt class="uppercase">Staleness limit</dt><dd>${p.stalenessThresholdMinutes}m</dd></div>
+              <div><dt class="uppercase">Min rows/run</dt><dd>${p.minExpectedRowsPerRun}</dd></div>
+              <div><dt class="uppercase">Live page</dt><dd>${p.visibleOnLivePage ? "visible" : "hidden"}</dd></div>
+              <div><dt class="uppercase">Implemented</dt><dd>${p.implemented ? "yes" : "not yet"}</dd></div>
+            </dl>
+            ${runsHtml}
+            <div class="mt-4 flex flex-wrap gap-2">
+              <button type="button" class="ops-pause-btn rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-bg-subtle)]" data-pipeline="${p.pipeline}" data-next-paused="${!p.paused}">
+                ${p.paused ? "Resume" : "Pause"}
+              </button>
+              <button type="button" class="ops-run-btn rounded-md bg-[var(--color-accent)] px-3 py-1.5 text-sm font-medium text-[var(--color-accent-fg)] disabled:cursor-not-allowed disabled:opacity-50" data-pipeline="${p.pipeline}" ${p.implemented ? "" : "disabled"}>
+                Run now
+              </button>
+              <span class="ops-run-result text-xs text-[var(--color-fg-muted)]" data-pipeline="${p.pipeline}">${runResultMessages.get(p.pipeline) ?? ""}</span>
+            </div>
+            ${
+              p.pipeline === "carbon"
+                ? `
+            <div class="mt-4 border-t border-[var(--color-border)] pt-4">
+              <p class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">Backfill (max 31 days)</p>
+              <p class="mt-1 text-xs text-[var(--color-fg-muted)]">Fetches real historical data from api.carbonintensity.org.uk — not fabricated.</p>
+              <form class="ops-backfill-form mt-2 flex flex-wrap items-end gap-2">
+                <label class="text-xs">From<br /><input type="datetime-local" name="from" required class="mt-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm" /></label>
+                <label class="text-xs">To<br /><input type="datetime-local" name="to" required class="mt-1 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)] px-2 py-1 text-sm" /></label>
+                <button type="submit" class="rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm font-medium hover:bg-[var(--color-bg-subtle)]">Backfill</button>
+                <span class="ops-backfill-result text-xs text-[var(--color-fg-muted)]"></span>
+              </form>
+            </div>`
+                : ""
+            }
+          </div>`;
+        })
+        .join("");
+
+      pipelinesEl.querySelectorAll<HTMLButtonElement>(".ops-pause-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const pipeline = btn.dataset.pipeline!;
+          const nextPaused = btn.dataset.nextPaused === "true";
+          btn.disabled = true;
+          try {
+            await adminFetch(`/api/admin/pipelines/${pipeline}/pause`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paused: nextPaused }),
+            });
+            await renderPipelines();
+            await renderAudit();
+          } catch (err) {
+            btn.disabled = false;
+            alert(err instanceof Error ? err.message : "Failed to update pipeline");
+          }
+        });
+      });
+
+      pipelinesEl.querySelectorAll<HTMLButtonElement>(".ops-run-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const pipeline = btn.dataset.pipeline!;
+          const resultEl = btn.parentElement!.querySelector(".ops-run-result")!;
+          btn.disabled = true;
+          resultEl.textContent = "Running…";
+          try {
+            const { data } = await adminFetch(`/api/admin/pipelines/${pipeline}/run`, { method: "POST" });
+            const message = data.skipped
+              ? "Skipped — pipeline is paused."
+              : `Done — ${data.rowsSilver ?? 0} silver rows, ${data.rowsGold ?? 0} gold rows.`;
+            runResultMessages.set(pipeline, message);
+            await renderPipelines();
+            await renderQuality();
+            await renderBronze();
+            await renderAudit();
+            setTimeout(() => {
+              runResultMessages.delete(pipeline);
+              pipelinesEl.querySelector(`.ops-run-result[data-pipeline="${pipeline}"]`)?.replaceChildren();
+            }, 5000);
+          } catch (err) {
+            runResultMessages.set(pipeline, err instanceof Error ? err.message : "Run failed");
+            await renderPipelines();
+          } finally {
+            btn.disabled = false;
+          }
+        });
+      });
+
+      pipelinesEl.querySelectorAll<HTMLFormElement>(".ops-backfill-form").forEach((form) => {
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const resultEl = form.querySelector(".ops-backfill-result")!;
+          const fromInput = form.elements.namedItem("from") as HTMLInputElement;
+          const toInput = form.elements.namedItem("to") as HTMLInputElement;
+          const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+
+          submitBtn.disabled = true;
+          resultEl.textContent = "Backfilling…";
+          try {
+            const { data } = await adminFetch("/api/admin/pipelines/carbon/backfill", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                from: new Date(fromInput.value).toISOString(),
+                to: new Date(toInput.value).toISOString(),
+              }),
+            });
+            resultEl.textContent = data.skipped
+              ? "Skipped — pipeline is paused."
+              : `Done — ${data.rowsSilver ?? 0} silver rows, ${data.rowsGold ?? 0} gold rows.`;
+            await renderQuality();
+            await renderBronze();
+            await renderAudit();
+          } catch (err) {
+            resultEl.textContent = err instanceof Error ? err.message : "Backfill failed";
+          } finally {
+            submitBtn.disabled = false;
+          }
+        });
+      });
+    }
+
+    async function renderQuality() {
+      const pipeline = qualityFilterEl.value;
+      const { data }: { data: QualityCheck[] } = await adminFetch(
+        `/api/admin/quality${pipeline ? `?pipeline=${pipeline}` : ""}`,
+      );
+      qualityRowsEl.innerHTML = data.length
+        ? data
+            .map(
+              (c) => `
+        <tr class="border-b border-[var(--color-border)]">
+          <td class="py-2 pr-4">${c.pipeline ?? "—"}</td>
+          <td class="py-2 pr-4">${c.layer}</td>
+          <td class="py-2 pr-4 capitalize">${c.check_name}</td>
+          <td class="py-2 pr-4">${badge(c.status, c.status === "pass" ? "pass" : "fail")}</td>
+          <td class="py-2 pr-4">${c.observed_value ?? "—"} / ${c.expected_value ?? "—"}</td>
+          <td class="py-2 pr-4">${fmtDate(c.run_at)}</td>
+        </tr>`,
+            )
+            .join("")
+        : `<tr><td colspan="6" class="py-4 text-[var(--color-fg-muted)]">No quality checks recorded yet.</td></tr>`;
+    }
+
+    async function renderBronze() {
+      const pipeline = bronzeFilterEl.value;
+      const { data }: { data: BronzeRow[] } = await adminFetch(
+        `/api/admin/bronze?limit=50${pipeline ? `&pipeline=${pipeline}` : ""}`,
+      );
+      bronzeRowsEl.innerHTML = data.length
+        ? data
+            .map(
+              (b) => `
+        <tr class="border-b border-[var(--color-border)]">
+          <td class="py-2 pr-4">${b.id}</td>
+          <td class="py-2 pr-4">${b.pipeline}</td>
+          <td class="py-2 pr-4 font-mono text-xs">${b.r2_key}</td>
+          <td class="py-2 pr-4">${b.http_status ?? "—"}</td>
+          <td class="py-2 pr-4">${b.byte_size ?? "—"}</td>
+          <td class="py-2 pr-4">${fmtDate(b.fetched_at)}</td>
+          <td class="py-2 pr-4">${b.processed_at ? badge("processed", "pass") : badge("pending", "neutral")}</td>
+          <td class="py-2 pr-4"><button type="button" class="ops-view-payload-btn text-[var(--color-accent)] underline underline-offset-2" data-id="${b.id}">View payload</button></td>
+        </tr>`,
+            )
+            .join("")
+        : `<tr><td colspan="8" class="py-4 text-[var(--color-fg-muted)]">No bronze records yet.</td></tr>`;
+
+      bronzeRowsEl.querySelectorAll<HTMLButtonElement>(".ops-view-payload-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id!;
+          bronzePayloadEl.classList.remove("hidden");
+          bronzePayloadEl.textContent = "Loading…";
+          try {
+            const { data } = await adminFetch(`/api/admin/bronze/${id}/payload`);
+            bronzePayloadEl.textContent = JSON.stringify(data.payload, null, 2);
+          } catch (err) {
+            bronzePayloadEl.textContent = err instanceof Error ? err.message : "Failed to load payload";
+          }
+        });
+      });
+    }
+
+    async function renderAudit() {
+      const { data }: { data: AuditRow[] } = await adminFetch("/api/admin/audit?limit=25");
+      auditRowsEl.innerHTML = data.length
+        ? data
+            .map(
+              (a) => `
+        <tr class="border-b border-[var(--color-border)]">
+          <td class="py-2 pr-4">${fmtDate(a.created_at)}</td>
+          <td class="py-2 pr-4">${a.actor_email}</td>
+          <td class="py-2 pr-4">${a.action}</td>
+          <td class="py-2 pr-4">${a.target ?? "—"}</td>
+          <td class="py-2 pr-4">${badge(a.result, a.result === "success" ? "pass" : "fail")}</td>
+        </tr>`,
+            )
+            .join("")
+        : `<tr><td colspan="5" class="py-4 text-[var(--color-fg-muted)]">No admin actions recorded yet.</td></tr>`;
+    }
+
+    async function loadAll() {
+      const { data: identity } = await adminFetch("/api/admin/whoami");
+      whoamiEl.textContent = identity.email;
+      await Promise.all([renderPipelines(), renderQuality(), renderBronze(), renderAudit()]);
+    }
+
+    try {
+      await loadAll();
+      loadingEl.classList.add("hidden");
+      contentEl.classList.remove("hidden");
+    } catch (err) {
+      loadingEl.classList.add("hidden");
+      errorEl.classList.remove("hidden");
+      errorEl.textContent =
+        err instanceof Error
+          ? `Could not load the ops dashboard: ${err.message}`
+          : "Could not load the ops dashboard.";
+      return;
+    }
+
+    document.getElementById("ops-refresh")!.addEventListener("click", async () => {
+      try {
+        await loadAll();
+      } catch (err) {
+        alert(err instanceof Error ? err.message : "Refresh failed");
+      }
+    });
+    qualityFilterEl.addEventListener("change", renderQuality);
+    bronzeFilterEl.addEventListener("change", renderBronze);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initOpsDashboard);
+  } else {
+    initOpsDashboard();
+  }
+</script>

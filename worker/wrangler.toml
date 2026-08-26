@@ -41,7 +41,13 @@ ENVIRONMENT = "development"
 # (see README for the specific numbers assumed).
 MAX_BACKFILL_DAYS_PER_RUN = "31"
 API_CACHE_TTL_SECONDS = "300"
+ADMIN_ALLOWED_ORIGINS = "https://tajammalhussains.uk,http://localhost:4321"
+# Set once a real GitHub OAuth App exists for the /admin/content CMS (see
+# worker/src/routes/oauth.ts) — client ID is public, safe as a plain var.
+# GITHUB_OAUTH_CLIENT_ID = "REPLACE_WITH_REAL_CLIENT_ID"
 
 # ─── Secrets (set via `wrangler secret put NAME`, never committed) ─────────────
 # CF_ACCESS_TEAM_DOMAIN
 # CF_ACCESS_AUD
+# GITHUB_OAUTH_CLIENT_SECRET
+# META_INGEST_SECRET — bearer token CI presents to POST /api/meta/report-event

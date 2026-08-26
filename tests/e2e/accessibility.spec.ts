@@ -7,6 +7,8 @@ const PAGES = [
   "/work/approval-workflow-platform",
   "/live",
   "/live/carbon",
+  "/live/housing",
+  "/live/meta",
   "/writing",
   "/writing/why-this-site-runs-real-pipelines",
   "/about",
@@ -24,7 +26,10 @@ test.describe("Accessibility — WCAG 2.1 AA, zero violations", () => {
       const results = await new AxeBuilder({ page })
         .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
         .analyze();
-      expect(results.violations, JSON.stringify(results.violations, null, 2)).toEqual([]);
+      expect(
+        results.violations,
+        JSON.stringify(results.violations, null, 2),
+      ).toEqual([]);
     });
   }
 
@@ -49,14 +54,20 @@ test.describe("Accessibility — WCAG 2.1 AA, zero violations", () => {
     }
   });
 
-  test("full site is keyboard navigable: Tab reaches the skip link first", async ({ page }) => {
+  test("full site is keyboard navigable: Tab reaches the skip link first", async ({
+    page,
+  }) => {
     await page.goto("/");
     await page.keyboard.press("Tab");
-    const focused = await page.evaluate(() => document.activeElement?.textContent?.trim());
+    const focused = await page.evaluate(() =>
+      document.activeElement?.textContent?.trim(),
+    );
     expect(focused).toBe("Skip to content");
   });
 
-  test("theme toggle is reachable and operable by keyboard", async ({ page }) => {
+  test("theme toggle is reachable and operable by keyboard", async ({
+    page,
+  }) => {
     await page.goto("/");
     // The toggle lives inside the collapsible nav — open it first on
     // viewports narrow enough that it's hidden, since focusing a
@@ -69,7 +80,9 @@ test.describe("Accessibility — WCAG 2.1 AA, zero violations", () => {
     await toggle.focus();
     await expect(toggle).toBeFocused();
     await page.keyboard.press("Enter");
-    const theme = await page.evaluate(() => document.documentElement.dataset.theme);
+    const theme = await page.evaluate(
+      () => document.documentElement.dataset.theme,
+    );
     expect(["light", "dark"]).toContain(theme);
   });
 });

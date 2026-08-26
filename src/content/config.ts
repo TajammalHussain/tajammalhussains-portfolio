@@ -1,8 +1,8 @@
 import { defineCollection, z } from "astro:content";
 
 // These schemas are the contract between the Astro build and the Sveltia/Decap
-// CMS config (see /public/admin/config.yml) — field names and types must stay
-// in lockstep with each other (spec 11.2).
+// CMS config (see /public/admin/content/config.yml) — field names and types
+// must stay in lockstep with each other (spec 11.2).
 
 const caseStudies = defineCollection({
   type: "content",

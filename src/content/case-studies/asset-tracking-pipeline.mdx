@@ -55,12 +55,14 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   A[QR scan on\nsite] --> B[Ingestion\nservice]
   B --> C[(Event log\ntimestamped)]
   C --> D[Aggregation:\nlatest event per asset]
   D --> E[Current location\n+ status view]
-  C --> F[Pandas reporting:\nutilisation, dwell time]`} />
+  C --> F[Pandas reporting:\nutilisation, dwell time]`}
+/>
 
 Treating every scan as an immutable event rather than overwriting a "current
 state" field is the key decision here — it turns a simple scanning app into a

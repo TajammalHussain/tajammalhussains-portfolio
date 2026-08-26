@@ -15,7 +15,9 @@ const dateOf = (isoTimestamp: string) => isoTimestamp.slice(0, 10); // YYYY-MM-D
  * actual-based aggregates but still count toward `readingCount` and the
  * forecast average.
  */
-export function computeDailyGold(readings: CarbonReadingSilverRow[]): CarbonDailyGoldRow[] {
+export function computeDailyGold(
+  readings: CarbonReadingSilverRow[],
+): CarbonDailyGoldRow[] {
   const byDate = new Map<string, CarbonReadingSilverRow[]>();
   for (const r of readings) {
     const date = dateOf(r.periodFrom);
@@ -31,7 +33,9 @@ export function computeDailyGold(readings: CarbonReadingSilverRow[]): CarbonDail
         r.actualIntensity !== null,
     );
 
-    const avgForecastIntensity = average(dayReadings.map((r) => r.forecastIntensity));
+    const avgForecastIntensity = average(
+      dayReadings.map((r) => r.forecastIntensity),
+    );
     const avgActualIntensity = withActual.length
       ? average(withActual.map((r) => r.actualIntensity))
       : null;
@@ -53,7 +57,9 @@ export function computeDailyGold(readings: CarbonReadingSilverRow[]): CarbonDail
       maxIntensityPeriod: maxRow?.periodFrom ?? null,
       forecastVariancePct:
         avgActualIntensity !== null && avgForecastIntensity !== 0
-          ? ((avgActualIntensity - avgForecastIntensity) / avgForecastIntensity) * 100
+          ? ((avgActualIntensity - avgForecastIntensity) /
+              avgForecastIntensity) *
+            100
           : null,
       readingCount: dayReadings.length,
     });
@@ -63,7 +69,9 @@ export function computeDailyGold(readings: CarbonReadingSilverRow[]): CarbonDail
 }
 
 /** Groups fuel-mix silver rows by date and computes each fuel type's average share. */
-export function computeFuelMixGold(rows: GenerationMixSilverRow[]): FuelMixGoldRow[] {
+export function computeFuelMixGold(
+  rows: GenerationMixSilverRow[],
+): FuelMixGoldRow[] {
   const byDateFuel = new Map<string, number[]>();
   for (const r of rows) {
     const key = `${dateOf(r.periodFrom)}::${r.fuelType}`;
@@ -77,7 +85,10 @@ export function computeFuelMixGold(rows: GenerationMixSilverRow[]): FuelMixGoldR
       const [date, fuelType] = key.split("::") as [string, string];
       return { date, fuelType, avgShare: average(shares) };
     })
-    .sort((a, b) => a.date.localeCompare(b.date) || a.fuelType.localeCompare(b.fuelType));
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) || a.fuelType.localeCompare(b.fuelType),
+    );
 }
 
 function average(values: number[]): number {

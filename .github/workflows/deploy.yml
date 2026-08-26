@@ -1,0 +1,93 @@
+name: Deploy
+
+# Every push to main deploys — the site is small enough, and the test suite
+# thorough enough (see ci.yml), that gating deploy behind a separate manual
+# step wouldn't buy much. Requires repository secrets that don't exist until
+# a real Cloudflare account + GitHub OAuth App are set up — see
+# ARCHITECTURE.md's "Deploying for the first time" section.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false # never abandon a deploy partway through
+
+jobs:
+  deploy-worker:
+    name: Deploy Worker (API + pipelines) and run D1 migrations
+    runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - name: Install worker dependencies
+        run: npm ci
+        working-directory: worker
+
+      - name: Run D1 migrations against production
+        run: npm run d1:migrate:remote
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Deploy Worker
+        run: npm run deploy
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  deploy-pages:
+    name: Build and deploy the Astro site to Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: deploy-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium (build-time Mermaid SVG + OG images)
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_API_BASE_URL: https://api.tajammalhussains.uk
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=tajammalhussains-portfolio
+
+  report-deploy-event:
+    name: Report this deploy to the site's own meta-pipeline
+    runs-on: ubuntu-latest
+    needs: [deploy-worker, deploy-pages]
+    if: always() && needs.deploy-worker.result == 'success'
+    steps:
+      # A real deploy just happened — record it as a real event (see
+      # worker/src/routes/meta.ts), not a fabricated one. If this step's
+      # secret isn't configured yet, it fails harmlessly on its own.
+      - name: POST to /api/meta/report-event
+        run: |
+          curl -sf -X POST "https://api.tajammalhussains.uk/api/meta/report-event" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.META_INGEST_SECRET }}" \
+            -d "{\"eventType\":\"deploy\",\"commitSha\":\"${{ needs.deploy-worker.outputs.commit_sha }}\",\"deployedBy\":\"github-actions\",\"environment\":\"production\"}"

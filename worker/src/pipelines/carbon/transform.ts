@@ -20,7 +20,9 @@ export function transformIntensityToSilver(
 
   return payload.data.map((entry) => {
     if (!entry.from || !entry.to) {
-      throw new InvalidPayloadError(`intensity entry missing from/to: ${JSON.stringify(entry)}`);
+      throw new InvalidPayloadError(
+        `intensity entry missing from/to: ${JSON.stringify(entry)}`,
+      );
     }
     if (typeof entry.intensity?.forecast !== "number") {
       throw new InvalidPayloadError(
@@ -29,14 +31,18 @@ export function transformIntensityToSilver(
     }
     const validBands = ["very low", "low", "moderate", "high", "very high"];
     if (!validBands.includes(entry.intensity.index)) {
-      throw new InvalidPayloadError(`unexpected index band: ${entry.intensity.index}`);
+      throw new InvalidPayloadError(
+        `unexpected index band: ${entry.intensity.index}`,
+      );
     }
 
     return {
       periodFrom: entry.from,
       periodTo: entry.to,
       actualIntensity:
-        typeof entry.intensity.actual === "number" ? entry.intensity.actual : null,
+        typeof entry.intensity.actual === "number"
+          ? entry.intensity.actual
+          : null,
       forecastIntensity: entry.intensity.forecast,
       indexBand: entry.intensity.index,
     };
@@ -47,8 +53,13 @@ export function transformIntensityToSilver(
 export function transformGenerationToSilver(
   payload: GenerationApiResponse,
 ): GenerationMixSilverRow[] {
-  if (!payload?.data?.generationmix || !Array.isArray(payload.data.generationmix)) {
-    throw new InvalidPayloadError("generation payload missing data.generationmix[]");
+  if (
+    !payload?.data?.generationmix ||
+    !Array.isArray(payload.data.generationmix)
+  ) {
+    throw new InvalidPayloadError(
+      "generation payload missing data.generationmix[]",
+    );
   }
   return normaliseGenerationMix(payload.data.from, payload.data.generationmix);
 }
@@ -60,7 +71,9 @@ export function transformGenerationRangeToSilver(
   if (!payload || !Array.isArray(payload.data)) {
     throw new InvalidPayloadError("generation range payload missing data[]");
   }
-  return payload.data.flatMap((period) => normaliseGenerationMix(period.from, period.generationmix));
+  return payload.data.flatMap((period) =>
+    normaliseGenerationMix(period.from, period.generationmix),
+  );
 }
 
 function normaliseGenerationMix(
@@ -81,7 +94,9 @@ function normaliseGenerationMix(
   }
   return mix.map((m) => {
     if (typeof m.perc !== "number" || m.perc < 0 || m.perc > 100) {
-      throw new InvalidPayloadError(`invalid fuel percentage for ${m.fuel}: ${m.perc}`);
+      throw new InvalidPayloadError(
+        `invalid fuel percentage for ${m.fuel}: ${m.perc}`,
+      );
     }
     return { periodFrom, fuelType: m.fuel, percentage: m.perc };
   });

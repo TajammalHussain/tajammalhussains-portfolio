@@ -1,7 +1,9 @@
 import type { Env } from "../lib/env";
 import { json, errorJson, withCache } from "../lib/http";
+import { getRecentSiteEvents } from "../pipelines/meta/persist";
 
-const isValidDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
+const isValidDate = (s: string) =>
+  /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 
 // GET /api/v1/health
 export async function handleHealth(env: Env): Promise<Response> {
@@ -18,36 +20,41 @@ export async function handleHealth(env: Env): Promise<Response> {
 // GET /api/v1/carbon/current
 export async function handleCarbonCurrent(env: Env): Promise<Response> {
   const cacheTtl = Number(env.API_CACHE_TTL_SECONDS || "300");
-  const { data, cacheHit } = await withCache(env, "api:carbon:current", cacheTtl, async () => {
-    const reading = await env.DB.prepare(
-      `SELECT period_from, period_to, actual_intensity, forecast_intensity, index_band
+  const { data, cacheHit } = await withCache(
+    env,
+    "api:carbon:current",
+    cacheTtl,
+    async () => {
+      const reading = await env.DB.prepare(
+        `SELECT period_from, period_to, actual_intensity, forecast_intensity, index_band
        FROM carbon_readings_silver ORDER BY period_from DESC LIMIT 1`,
-    ).first<{
-      period_from: string;
-      period_to: string;
-      actual_intensity: number | null;
-      forecast_intensity: number;
-      index_band: string;
-    }>();
+      ).first<{
+        period_from: string;
+        period_to: string;
+        actual_intensity: number | null;
+        forecast_intensity: number;
+        index_band: string;
+      }>();
 
-    if (!reading) return null;
+      if (!reading) return null;
 
-    const mix = await env.DB.prepare(
-      `SELECT fuel_type, percentage FROM carbon_generation_mix_silver
+      const mix = await env.DB.prepare(
+        `SELECT fuel_type, percentage FROM carbon_generation_mix_silver
        WHERE period_from = ?1 ORDER BY percentage DESC`,
-    )
-      .bind(reading.period_from)
-      .all<{ fuel_type: string; percentage: number }>();
+      )
+        .bind(reading.period_from)
+        .all<{ fuel_type: string; percentage: number }>();
 
-    return {
-      periodFrom: reading.period_from,
-      periodTo: reading.period_to,
-      actualIntensity: reading.actual_intensity,
-      forecastIntensity: reading.forecast_intensity,
-      indexBand: reading.index_band,
-      generationMix: mix.results,
-    };
-  });
+      return {
+        periodFrom: reading.period_from,
+        periodTo: reading.period_to,
+        actualIntensity: reading.actual_intensity,
+        forecastIntensity: reading.forecast_intensity,
+        indexBand: reading.index_band,
+        generationMix: mix.results,
+      };
+    },
+  );
 
   if (data === null) {
     return errorJson("no carbon intensity data ingested yet", 503);
@@ -56,13 +63,19 @@ export async function handleCarbonCurrent(env: Env): Promise<Response> {
 }
 
 // GET /api/v1/carbon/history?from=YYYY-MM-DD&to=YYYY-MM-DD&granularity=daily|raw
-export async function handleCarbonHistory(env: Env, url: URL): Promise<Response> {
+export async function handleCarbonHistory(
+  env: Env,
+  url: URL,
+): Promise<Response> {
   const from = url.searchParams.get("from");
   const to = url.searchParams.get("to");
   const granularity = url.searchParams.get("granularity") ?? "daily";
 
   if (!from || !to || !isValidDate(from) || !isValidDate(to)) {
-    return errorJson("query params 'from' and 'to' are required, format YYYY-MM-DD", 400);
+    return errorJson(
+      "query params 'from' and 'to' are required, format YYYY-MM-DD",
+      400,
+    );
   }
   if (granularity !== "daily" && granularity !== "raw") {
     return errorJson("granularity must be 'daily' or 'raw'", 400);
@@ -70,27 +83,32 @@ export async function handleCarbonHistory(env: Env, url: URL): Promise<Response>
 
   const cacheKey = `api:carbon:history:${from}:${to}:${granularity}`;
   const cacheTtl = Number(env.API_CACHE_TTL_SECONDS || "300");
-  const { data, cacheHit } = await withCache(env, cacheKey, cacheTtl, async () => {
-    if (granularity === "daily") {
-      const result = await env.DB.prepare(
-        `SELECT date, avg_actual_intensity, avg_forecast_intensity, min_intensity,
+  const { data, cacheHit } = await withCache(
+    env,
+    cacheKey,
+    cacheTtl,
+    async () => {
+      if (granularity === "daily") {
+        const result = await env.DB.prepare(
+          `SELECT date, avg_actual_intensity, avg_forecast_intensity, min_intensity,
                 max_intensity, forecast_variance_pct, reading_count
          FROM carbon_daily_gold WHERE date BETWEEN ?1 AND ?2 ORDER BY date`,
+        )
+          .bind(from, to)
+          .all();
+        return result.results;
+      }
+      const result = await env.DB.prepare(
+        `SELECT period_from, period_to, actual_intensity, forecast_intensity, index_band
+       FROM carbon_readings_silver
+       WHERE substr(period_from, 1, 10) BETWEEN ?1 AND ?2
+       ORDER BY period_from`,
       )
         .bind(from, to)
         .all();
       return result.results;
-    }
-    const result = await env.DB.prepare(
-      `SELECT period_from, period_to, actual_intensity, forecast_intensity, index_band
-       FROM carbon_readings_silver
-       WHERE substr(period_from, 1, 10) BETWEEN ?1 AND ?2
-       ORDER BY period_from`,
-    )
-      .bind(from, to)
-      .all();
-    return result.results;
-  });
+    },
+  );
 
   return json({ data, cacheHit, meta: { from, to, granularity } });
 }
@@ -104,25 +122,32 @@ export async function handleCarbonMix(env: Env, url: URL): Promise<Response> {
 
   const cacheKey = `api:carbon:mix:${date ?? "latest"}`;
   const cacheTtl = Number(env.API_CACHE_TTL_SECONDS || "300");
-  const { data, cacheHit } = await withCache(env, cacheKey, cacheTtl, async () => {
-    const targetDate =
-      date ??
-      (
-        await env.DB.prepare(`SELECT MAX(date) as d FROM carbon_fuel_mix_gold`).first<{
-          d: string | null;
-        }>()
-      )?.d;
+  const { data, cacheHit } = await withCache(
+    env,
+    cacheKey,
+    cacheTtl,
+    async () => {
+      const targetDate =
+        date ??
+        (
+          await env.DB.prepare(
+            `SELECT MAX(date) as d FROM carbon_fuel_mix_gold`,
+          ).first<{
+            d: string | null;
+          }>()
+        )?.d;
 
-    if (!targetDate) return null;
+      if (!targetDate) return null;
 
-    const result = await env.DB.prepare(
-      `SELECT fuel_type, avg_share FROM carbon_fuel_mix_gold WHERE date = ?1 ORDER BY avg_share DESC`,
-    )
-      .bind(targetDate)
-      .all<{ fuel_type: string; avg_share: number }>();
+      const result = await env.DB.prepare(
+        `SELECT fuel_type, avg_share FROM carbon_fuel_mix_gold WHERE date = ?1 ORDER BY avg_share DESC`,
+      )
+        .bind(targetDate)
+        .all<{ fuel_type: string; avg_share: number }>();
 
-    return { date: targetDate, mix: result.results };
-  });
+      return { date: targetDate, mix: result.results };
+    },
+  );
 
   if (data === null) return errorJson("no generation mix data available", 503);
   return json({ data, cacheHit });
@@ -132,20 +157,52 @@ export async function handleCarbonMix(env: Env, url: URL): Promise<Response> {
 // Pipeline 2 lands later in the build order (see task tracker) — this route
 // exists now so the documented API shape is stable, but honestly reports
 // itself unavailable rather than fabricating data.
-export async function handleHousingRegional(env: Env, url: URL): Promise<Response> {
+export async function handleHousingRegional(
+  env: Env,
+  url: URL,
+): Promise<Response> {
   const region = url.searchParams.get("region");
-  const check = await env.DB.prepare(`SELECT COUNT(*) as n FROM housing_regional_gold`).first<{
+  const check = await env.DB.prepare(
+    `SELECT COUNT(*) as n FROM housing_regional_gold`,
+  ).first<{
     n: number;
   }>();
   if (!check || check.n === 0) {
     return errorJson("housing pipeline not yet deployed", 503);
   }
   const result = region
-    ? await env.DB.prepare(`SELECT * FROM housing_regional_gold WHERE region = ?1 ORDER BY period DESC`)
+    ? await env.DB.prepare(
+        `SELECT * FROM housing_regional_gold WHERE region = ?1 ORDER BY period DESC`,
+      )
         .bind(region)
         .all()
-    : await env.DB.prepare(`SELECT * FROM housing_regional_gold ORDER BY period DESC LIMIT 100`).all();
+    : await env.DB.prepare(
+        `SELECT * FROM housing_regional_gold ORDER BY period DESC LIMIT 100`,
+      ).all();
   return json({ data: result.results });
+}
+
+// GET /api/v1/meta/events?limit= — the site meta-pipeline's own event log:
+// daily analytics snapshots plus any real deploy/build events CI has
+// reported. Read-only and cached like every other public endpoint.
+export async function handleMetaEvents(env: Env, url: URL): Promise<Response> {
+  const limit = Math.min(Number(url.searchParams.get("limit")) || 20, 100);
+  const cacheTtl = Number(env.API_CACHE_TTL_SECONDS || "300");
+  const { data, cacheHit } = await withCache(
+    env,
+    `api:meta:events:${limit}`,
+    cacheTtl,
+    async () => {
+      const events = await getRecentSiteEvents(env, limit);
+      return events.map((e) => ({
+        id: e.id,
+        eventType: e.event_type,
+        occurredAt: e.occurred_at,
+        detail: JSON.parse(e.detail_json),
+      }));
+    },
+  );
+  return json({ data, cacheHit });
 }
 
 // GET /api/v1/pipelines/status

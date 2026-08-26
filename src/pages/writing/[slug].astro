@@ -37,7 +37,7 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={data.title} description={data.excerpt} jsonLd={jsonLd}>
+<BaseLayout title={data.title} description={data.excerpt} ogImage={`/og/writing/${post.slug}.png`} jsonLd={jsonLd}>
   <article class="mx-auto max-w-3xl">
     <a href="/writing" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
       >← All writing</a

@@ -41,8 +41,39 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/v1/housing/regional?region=",
-    description: "Regional house price aggregates. Returns 503 until Pipeline 2 is deployed — see /live.",
-    example: `{ "error": "housing pipeline not yet deployed" }`,
+    description: "Regional UK house price aggregates (HM Land Registry UK HPI, monthly) — 14 UK regions, average price plus month-on-month and year-on-year change. Omit `region` for the latest snapshot across all regions.",
+    example: `{
+  "data": [
+    {
+      "period": "2026-06",
+      "region": "london",
+      "average_price": 553870,
+      "mom_change_pct": null,
+      "yoy_change_pct": null,
+      "computed_at": "2026-08-25 07:47:33"
+    }
+  ]
+}`,
+  },
+  {
+    method: "GET",
+    path: "/api/v1/meta/events?limit=",
+    description: "The site meta-pipeline's own event log — daily self-referential snapshots of every other pipeline's health, plus real deploy/build events reported by CI.",
+    example: `{
+  "data": [
+    {
+      "id": 1,
+      "eventType": "analytics_snapshot",
+      "occurredAt": "2026-08-25T08:04:00.446Z",
+      "detail": {
+        "pipelineRunCounts": { "carbon": { "success": 3, "failed": 0, "running": 0 } },
+        "qualityCheckFailures24h": 0,
+        "totalAuditActions": 6,
+        "bronzeObjectsTotal": 22
+      }
+    }
+  ]
+}`,
   },
   {
     method: "GET",

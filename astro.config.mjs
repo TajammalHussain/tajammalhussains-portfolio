@@ -3,9 +3,23 @@ import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
+import { closeMermaidRenderer } from "./src/lib/mermaid-render.ts";
 
 // Full production domain — used for canonical URLs, sitemap, RSS, and OG tags.
 const SITE_URL = "https://tajammalhussains.uk";
+
+// Mermaid diagrams render to static SVG at build time via a Playwright-
+// controlled Chromium instance (see src/lib/mermaid-render.ts) — that
+// browser process must be explicitly closed once the build finishes, or its
+// open handle keeps `astro build` from ever exiting.
+const closeMermaidBrowserAfterBuild = {
+  name: "close-mermaid-renderer",
+  hooks: {
+    "astro:build:done": async () => {
+      await closeMermaidRenderer();
+    },
+  },
+};
 
 export default defineConfig({
   site: SITE_URL,
@@ -17,6 +31,7 @@ export default defineConfig({
       // they should never be advertised to crawlers.
       filter: (page) => !page.includes("/admin/"),
     }),
+    closeMermaidBrowserAfterBuild,
   ],
   vite: {
     // `@tailwindcss/vite` currently depends on vite@5 while Astro 5.x bundles

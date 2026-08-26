@@ -52,14 +52,16 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   A[Site A log] --> N[Normalisation\nat ingestion]
   B[Site B log] --> N
   C[Site C log] --> N
   N --> D[(Central Postgres\nattendance records)]
   D --> E[Go REST API]
   E --> F[Management\noverview]
-  E --> G[Per-site\ndrill-down]`} />
+  E --> G[Per-site\ndrill-down]`}
+/>
 
 The core idea: normalise once, at the point data enters the system, so every
 downstream consumer — the management dashboard, the per-site view, any future

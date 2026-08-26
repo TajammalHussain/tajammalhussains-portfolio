@@ -1,0 +1,126 @@
+---
+// Renders the site meta-pipeline's own event log: daily self-referential
+// snapshots of this Worker's operational state, plus any real deploy/build
+// events CI has reported. No Chart.js here — a timeline of small structured
+// events reads better as a list than a chart.
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
+---
+
+<div
+  id="meta-live-widget"
+  data-api-base={apiBase}
+  class="rounded-lg border border-[var(--color-border)] p-6"
+>
+  <div id="meta-loading" class="text-sm text-[var(--color-fg-muted)]">Loading live data…</div>
+  <div id="meta-error" class="hidden text-sm text-[var(--color-danger)]"></div>
+  <div id="meta-content" class="hidden space-y-4"></div>
+</div>
+
+<script>
+  interface PipelineRunCounts {
+    success: number;
+    failed: number;
+    running: number;
+  }
+  interface SnapshotDetail {
+    generatedAt: string;
+    pipelineRunCounts: Record<string, PipelineRunCounts>;
+    qualityCheckFailures24h: number;
+    totalAuditActions: number;
+    bronzeObjectsTotal: number;
+  }
+  interface DeployDetail {
+    commitSha: string;
+    commitMessage?: string;
+    deployedBy?: string;
+    environment?: string;
+  }
+  interface BuildDetail {
+    commitSha: string;
+    status: "success" | "failed";
+    durationSeconds?: number;
+  }
+  interface SiteEvent {
+    id: number;
+    eventType: "analytics_snapshot" | "deploy" | "build";
+    occurredAt: string;
+    detail: SnapshotDetail | DeployDetail | BuildDetail;
+  }
+
+  function fmtDate(iso: string): string {
+    return new Date(iso).toLocaleString("en-GB");
+  }
+
+  function renderEvent(e: SiteEvent): string {
+    if (e.eventType === "analytics_snapshot") {
+      const d = e.detail as SnapshotDetail;
+      const pipelineSummary = Object.entries(d.pipelineRunCounts)
+        .map(([p, c]) => `${p}: ${c.success} ok / ${c.failed} failed`)
+        .join(" · ");
+      return `
+        <div class="rounded-md border border-[var(--color-border)] p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">Analytics snapshot</span>
+            <span class="text-xs text-[var(--color-fg-muted)]">${fmtDate(e.occurredAt)}</span>
+          </div>
+          <p class="mt-2 text-sm">${pipelineSummary || "No pipeline runs recorded yet."}</p>
+          <p class="mt-1 text-xs text-[var(--color-fg-muted)]">
+            ${d.qualityCheckFailures24h} quality-check failure(s) in 24h · ${d.totalAuditActions} total admin actions · ${d.bronzeObjectsTotal} bronze objects landed
+          </p>
+        </div>`;
+    }
+    if (e.eventType === "deploy") {
+      const d = e.detail as DeployDetail;
+      return `
+        <div class="rounded-md border border-[var(--color-border)] p-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">Deploy</span>
+            <span class="text-xs text-[var(--color-fg-muted)]">${fmtDate(e.occurredAt)}</span>
+          </div>
+          <p class="mt-2 font-mono text-sm">${d.commitSha.slice(0, 7)}</p>
+          ${d.commitMessage ? `<p class="mt-1 text-sm">${d.commitMessage}</p>` : ""}
+          <p class="mt-1 text-xs text-[var(--color-fg-muted)]">${[d.deployedBy, d.environment].filter(Boolean).join(" · ")}</p>
+        </div>`;
+    }
+    const d = e.detail as BuildDetail;
+    return `
+      <div class="rounded-md border border-[var(--color-border)] p-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]">Build</span>
+          <span class="text-xs text-[var(--color-fg-muted)]">${fmtDate(e.occurredAt)}</span>
+        </div>
+        <p class="mt-2 font-mono text-sm">${d.commitSha.slice(0, 7)} — ${d.status}</p>
+        ${d.durationSeconds !== undefined ? `<p class="mt-1 text-xs text-[var(--color-fg-muted)]">${d.durationSeconds}s</p>` : ""}
+      </div>`;
+  }
+
+  async function initMetaWidget() {
+    const root = document.getElementById("meta-live-widget");
+    if (!root) return;
+    const apiBase = root.dataset.apiBase ?? "";
+    const loadingEl = document.getElementById("meta-loading")!;
+    const errorEl = document.getElementById("meta-error")!;
+    const contentEl = document.getElementById("meta-content")!;
+
+    try {
+      const res = await fetch(`${apiBase}/api/v1/meta/events?limit=10`);
+      if (!res.ok) throw new Error(`API returned ${res.status} — pipeline may not have run yet`);
+      const { data }: { data: SiteEvent[] } = await res.json();
+      if (data.length === 0) throw new Error("no events recorded yet");
+
+      contentEl.innerHTML = data.map(renderEvent).join("");
+      loadingEl.classList.add("hidden");
+      contentEl.classList.remove("hidden");
+    } catch (err) {
+      loadingEl.classList.add("hidden");
+      errorEl.classList.remove("hidden");
+      errorEl.textContent = err instanceof Error ? `Live data unavailable: ${err.message}` : "Live data unavailable.";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initMetaWidget);
+  } else {
+    initMetaWidget();
+  }
+</script>

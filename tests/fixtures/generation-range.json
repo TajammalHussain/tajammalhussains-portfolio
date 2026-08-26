@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "from": "2026-01-01T00:00Z",
+      "to": "2026-01-01T00:30Z",
+      "generationmix": [
+        { "fuel": "wind", "perc": 30.0 },
+        { "fuel": "gas", "perc": 70.0 }
+      ]
+    },
+    {
+      "from": "2026-01-01T00:30Z",
+      "to": "2026-01-01T01:00Z",
+      "generationmix": [
+        { "fuel": "wind", "perc": 40.0 },
+        { "fuel": "gas", "perc": 60.0 }
+      ]
+    }
+  ]
+}

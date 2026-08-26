@@ -8,7 +8,9 @@ import { test, expect } from "@playwright/test";
 // path is exercised deterministically in any environment, including CI.
 test.describe("Live data — graceful degradation when the API is unreachable", () => {
   test.beforeEach(async ({ page }) => {
-    await page.route("**/api/v1/**", (route) => route.abort("connectionrefused"));
+    await page.route("**/api/v1/**", (route) =>
+      route.abort("connectionrefused"),
+    );
   });
 
   test("homepage carbon widget shows an explicit error state, not stale/fake data", async ({
@@ -16,7 +18,9 @@ test.describe("Live data — graceful degradation when the API is unreachable", 
   }) => {
     await page.goto("/");
     const widget = page.locator("#carbon-live-widget");
-    await expect(widget.locator("#carbon-error")).toBeVisible({ timeout: 10_000 });
+    await expect(widget.locator("#carbon-error")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(widget.locator("#carbon-error")).toContainText(/unavailable/i);
     // The "loading" state must resolve to the error state, never hang, and
     // the "content" (numbers) block must stay hidden — no fabricated data.
@@ -24,10 +28,36 @@ test.describe("Live data — graceful degradation when the API is unreachable", 
     await expect(widget.locator("#carbon-content")).toBeHidden();
   });
 
-  test("/live/carbon detail page shows the same honest error state", async ({ page }) => {
+  test("/live/carbon detail page shows the same honest error state", async ({
+    page,
+  }) => {
     await page.goto("/live/carbon");
     const widget = page.locator("#carbon-live-widget");
-    await expect(widget.locator("#carbon-error")).toBeVisible({ timeout: 10_000 });
+    await expect(widget.locator("#carbon-error")).toBeVisible({
+      timeout: 10_000,
+    });
+  });
+
+  test("/live/housing detail page shows an explicit error state, not fabricated regional data", async ({
+    page,
+  }) => {
+    await page.goto("/live/housing");
+    const widget = page.locator("#housing-live-widget");
+    await expect(widget.locator("#housing-error")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(widget.locator("#housing-content")).toBeHidden();
+  });
+
+  test("/live/meta detail page shows an explicit error state, not a fabricated event history", async ({
+    page,
+  }) => {
+    await page.goto("/live/meta");
+    const widget = page.locator("#meta-live-widget");
+    await expect(widget.locator("#meta-error")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(widget.locator("#meta-content")).toBeHidden();
   });
 
   test("/status shows an honest error rather than fabricated pipeline health", async ({
@@ -35,7 +65,9 @@ test.describe("Live data — graceful degradation when the API is unreachable", 
   }) => {
     await page.goto("/status");
     const widget = page.locator("#status-widget");
-    await expect(widget.locator("#status-error")).toBeVisible({ timeout: 10_000 });
+    await expect(widget.locator("#status-error")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(widget.locator("#status-content")).toBeHidden();
   });
 
@@ -43,7 +75,9 @@ test.describe("Live data — graceful degradation when the API is unreachable", 
     page,
   }) => {
     await page.goto("/live/carbon");
-    await expect(page.getByRole("heading", { name: "Architecture" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Architecture" }),
+    ).toBeVisible();
     const wrapper = page.locator(".mermaid-wrapper");
     await wrapper.scrollIntoViewIfNeeded();
     await expect(wrapper.locator("svg")).toBeVisible({ timeout: 20_000 });
@@ -74,16 +108,106 @@ test.describe("Live data — renders real numbers when the API is available", ()
       }),
     );
     await page.route("**/api/v1/carbon/history**", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: [] }) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: [] }),
+      }),
     );
     await page.route("**/api/v1/carbon/mix", (route) =>
-      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ data: null }) }),
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ data: null }),
+      }),
     );
 
     await page.goto("/");
     const widget = page.locator("#carbon-live-widget");
-    await expect(widget.locator("#carbon-content")).toBeVisible({ timeout: 10_000 });
+    await expect(widget.locator("#carbon-content")).toBeVisible({
+      timeout: 10_000,
+    });
     await expect(widget.locator("#carbon-current-value")).toContainText("61");
     await expect(widget.locator("#carbon-index-band")).toContainText("low");
+  });
+
+  test("/live/housing renders the mocked regional table and chart", async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/housing/regional", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [
+            {
+              period: "2026-06",
+              region: "london",
+              average_price: 556853,
+              mom_change_pct: 0.6,
+              yoy_change_pct: 0.1,
+            },
+            {
+              period: "2026-06",
+              region: "scotland",
+              average_price: 195355,
+              mom_change_pct: null,
+              yoy_change_pct: null,
+            },
+          ],
+        }),
+      }),
+    );
+
+    await page.goto("/live/housing");
+    const widget = page.locator("#housing-live-widget");
+    await expect(widget.locator("#housing-content")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(widget.locator("#housing-region-rows")).toContainText(
+      "London",
+    );
+    await expect(widget.locator("#housing-region-rows")).toContainText(
+      "£556,853",
+    );
+    await expect(widget.locator("#housing-region-rows")).toContainText("+0.6%");
+  });
+
+  test("/live/meta renders the mocked event log", async ({ page }) => {
+    await page.route("**/api/v1/meta/events**", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: [
+            {
+              id: 1,
+              eventType: "analytics_snapshot",
+              occurredAt: new Date().toISOString(),
+              detail: {
+                pipelineRunCounts: {
+                  carbon: { success: 3, failed: 0, running: 0 },
+                },
+                qualityCheckFailures24h: 0,
+                totalAuditActions: 6,
+                bronzeObjectsTotal: 22,
+              },
+            },
+          ],
+        }),
+      }),
+    );
+
+    await page.goto("/live/meta");
+    const widget = page.locator("#meta-live-widget");
+    await expect(widget.locator("#meta-content")).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(widget.locator("#meta-content")).toContainText(
+      "Analytics snapshot",
+    );
+    await expect(widget.locator("#meta-content")).toContainText(
+      "carbon: 3 ok / 0 failed",
+    );
   });
 });

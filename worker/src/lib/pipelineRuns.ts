@@ -43,8 +43,13 @@ export async function finishPipelineRun(
     .run();
 }
 
-export async function isPipelinePaused(env: Env, pipeline: string): Promise<boolean> {
-  const row = await env.DB.prepare(`SELECT paused FROM pipeline_config WHERE pipeline = ?1`)
+export async function isPipelinePaused(
+  env: Env,
+  pipeline: string,
+): Promise<boolean> {
+  const row = await env.DB.prepare(
+    `SELECT paused FROM pipeline_config WHERE pipeline = ?1`,
+  )
     .bind(pipeline)
     .first<{ paused: number }>();
   return row?.paused === 1;

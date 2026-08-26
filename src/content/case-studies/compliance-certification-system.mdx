@@ -62,13 +62,15 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
-<MermaidDiagram chart={`flowchart LR
+<MermaidDiagram
+  chart={`flowchart LR
   A[Case created\ninputs recorded] --> B[Calculation\nengine]
   B --> C[Versioned result\nrecord]
   C --> D[E-signature\napproval step]
   D -->|signed| E[Certified\n+ timestamped]
   D -->|rejected| F[Returned for\ncorrection to new version]
-  C --> G[Power BI\nstatus dashboard]`} />
+  C --> G[Power BI\nstatus dashboard]`}
+/>
 
 The specific calculation methods used in this domain are not described here —
 they are internal, compliance-sensitive business logic. What's shown is the

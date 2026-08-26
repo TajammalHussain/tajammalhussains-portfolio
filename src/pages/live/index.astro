@@ -26,13 +26,29 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
         <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
       </a>
     </li>
-    <li class="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-[var(--color-fg-muted)]">
-      <h2 class="font-semibold">UK House Price Data</h2>
-      <p class="mt-2 text-sm">Monthly ingestion — build in progress.</p>
+    <li>
+      <a
+        href="/live/housing"
+        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <h2 class="font-semibold">UK House Price Data</h2>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
+          Monthly via Cloudflare Cron Trigger, 14 UK regions. Bronze → silver → gold → public API.
+        </p>
+        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+      </a>
     </li>
-    <li class="rounded-lg border border-dashed border-[var(--color-border)] p-6 text-[var(--color-fg-muted)]">
-      <h2 class="font-semibold">Site Meta-Pipeline</h2>
-      <p class="mt-2 text-sm">Self-referential build/deploy + analytics ingestion — build in progress.</p>
+    <li>
+      <a
+        href="/live/meta"
+        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+      >
+        <h2 class="font-semibold">Site Meta-Pipeline</h2>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
+          Daily self-referential snapshot, plus real deploy/build events from CI. Bronze → silver → public API.
+        </p>
+        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+      </a>
     </li>
   </ul>
 </BaseLayout>

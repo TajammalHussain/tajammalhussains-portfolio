@@ -5,7 +5,8 @@
 // uniqueness, referential).
 
 export interface QualityCheckResult {
-  checkName: "freshness" | "completeness" | "validity" | "uniqueness" | "referential";
+  checkName:
+    "freshness" | "completeness" | "validity" | "uniqueness" | "referential";
   status: "pass" | "fail";
   observedValue: string;
   expectedValue: string;
@@ -83,7 +84,10 @@ export function checkUniqueness(keys: string[]): QualityCheckResult {
     status: duplicates.size === 0 ? "pass" : "fail",
     observedValue: `${duplicates.size} duplicate key(s)`,
     expectedValue: "0 duplicates",
-    detail: duplicates.size > 0 ? Array.from(duplicates).slice(0, 5).join(", ") : undefined,
+    detail:
+      duplicates.size > 0
+        ? Array.from(duplicates).slice(0, 5).join(", ")
+        : undefined,
   };
 }
 

@@ -24,8 +24,10 @@ function emit(level: LogLevel, message: string, fields: LogFields = {}) {
 }
 
 export const logger = {
-  debug: (message: string, fields?: LogFields) => emit("debug", message, fields),
+  debug: (message: string, fields?: LogFields) =>
+    emit("debug", message, fields),
   info: (message: string, fields?: LogFields) => emit("info", message, fields),
   warn: (message: string, fields?: LogFields) => emit("warn", message, fields),
-  error: (message: string, fields?: LogFields) => emit("error", message, fields),
+  error: (message: string, fields?: LogFields) =>
+    emit("error", message, fields),
 };

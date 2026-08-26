@@ -65,7 +65,11 @@ describe("checkValidity", () => {
   });
 
   it("passes with null when allowNull is set", () => {
-    const result = checkValidity([10, null, 90], { min: 0, max: 100 }, { allowNull: true });
+    const result = checkValidity(
+      [10, null, 90],
+      { min: 0, max: 100 },
+      { allowNull: true },
+    );
     expect(result.status).toBe("pass");
   });
 

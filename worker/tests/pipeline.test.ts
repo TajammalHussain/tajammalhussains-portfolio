@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll, afterEach } from "vitest";
 import { env, fetchMock } from "cloudflare:test";
-import { runCarbonPipeline } from "../src/pipelines/carbon/run";
+import { runCarbonPipeline, runCarbonBackfill, InvalidBackfillRangeError } from "../src/pipelines/carbon/run";
 import intensityFixture from "../../tests/fixtures/carbon-intensity-current.json";
 import generationFixture from "../../tests/fixtures/generation-current.json";
+import intensityDayFixture from "../../tests/fixtures/carbon-intensity-day.json";
+import generationRangeFixture from "../../tests/fixtures/generation-range.json";
 
 beforeAll(() => {
   fetchMock.activate();
@@ -15,11 +17,15 @@ function mockCarbonApiOnce() {
   fetchMock
     .get("https://api.carbonintensity.org.uk")
     .intercept({ path: "/intensity" })
-    .reply(200, JSON.stringify(intensityFixture), { headers: { "content-type": "application/json" } });
+    .reply(200, JSON.stringify(intensityFixture), {
+      headers: { "content-type": "application/json" },
+    });
   fetchMock
     .get("https://api.carbonintensity.org.uk")
     .intercept({ path: "/generation" })
-    .reply(200, JSON.stringify(generationFixture), { headers: { "content-type": "application/json" } });
+    .reply(200, JSON.stringify(generationFixture), {
+      headers: { "content-type": "application/json" },
+    });
 }
 
 describe("runCarbonPipeline - full bronze -> silver -> gold run", () => {
@@ -27,7 +33,8 @@ describe("runCarbonPipeline - full bronze -> silver -> gold run", () => {
     mockCarbonApiOnce();
 
     const result = await runCarbonPipeline(env as never, "manual");
-    if (result.skipped) throw new Error("pipeline unexpectedly skipped (paused?)");
+    if (result.skipped)
+      throw new Error("pipeline unexpectedly skipped (paused?)");
 
     expect(result.rowsSilver).toBe(1 + 9); // 1 intensity reading + 9 fuel-mix rows
     expect(result.rowsGold).toBeGreaterThan(0);
@@ -97,9 +104,77 @@ describe("runCarbonPipeline - full bronze -> silver -> gold run", () => {
   });
 
   it("skips the run entirely when the pipeline is paused", async () => {
-    await env.DB.prepare(`UPDATE pipeline_config SET paused = 1 WHERE pipeline = 'carbon'`).run();
+    await env.DB.prepare(
+      `UPDATE pipeline_config SET paused = 1 WHERE pipeline = 'carbon'`,
+    ).run();
 
     const result = await runCarbonPipeline(env as never, "cron");
+    expect(result.skipped).toBe(true);
+
+    await env.DB.prepare(
+      `UPDATE pipeline_config SET paused = 0 WHERE pipeline = 'carbon'`,
+    ).run();
+  });
+});
+
+describe("runCarbonBackfill - real historical range ingestion", () => {
+  function mockBackfillRangeOnce(from: string, to: string) {
+    fetchMock
+      .get("https://api.carbonintensity.org.uk")
+      .intercept({ path: `/intensity/${from}/${to}` })
+      .reply(200, JSON.stringify(intensityDayFixture), {
+        headers: { "content-type": "application/json" },
+      });
+    fetchMock
+      .get("https://api.carbonintensity.org.uk")
+      .intercept({ path: `/generation/${from}/${to}` })
+      .reply(200, JSON.stringify(generationRangeFixture), {
+        headers: { "content-type": "application/json" },
+      });
+  }
+
+  it("lands multi-period bronze, writes every silver row, and recomputes gold for the affected date", async () => {
+    mockBackfillRangeOnce("2026-01-01T00:00Z", "2026-01-02T00:00Z");
+
+    const result = await runCarbonBackfill(env as never, "2026-01-01T00:00Z", "2026-01-02T00:00Z");
+    if (result.skipped) throw new Error("backfill unexpectedly skipped (paused?)");
+
+    expect(result.rowsSilver).toBe(5 + 4); // 5 intensity periods (fixture) + 2 periods x 2 fuels
+    expect(result.rowsGold).toBeGreaterThan(0);
+
+    const readings = await env.DB.prepare(`SELECT COUNT(*) as n FROM carbon_readings_silver`).first<{
+      n: number;
+    }>();
+    expect(readings?.n).toBe(5);
+
+    const goldRow = await env.DB.prepare(`SELECT reading_count FROM carbon_daily_gold WHERE date = '2026-01-01'`).first<{
+      reading_count: number;
+    }>();
+    expect(goldRow?.reading_count).toBe(5);
+  });
+
+  it("rejects a range spanning more than MAX_BACKFILL_DAYS_PER_RUN without making any request", async () => {
+    await expect(
+      runCarbonBackfill(env as never, "2026-01-01T00:00Z", "2026-03-01T00:00Z"),
+    ).rejects.toThrow(InvalidBackfillRangeError);
+  });
+
+  it("rejects 'to' before 'from'", async () => {
+    await expect(
+      runCarbonBackfill(env as never, "2026-01-02T00:00Z", "2026-01-01T00:00Z"),
+    ).rejects.toThrow(InvalidBackfillRangeError);
+  });
+
+  it("rejects an unparseable date", async () => {
+    await expect(runCarbonBackfill(env as never, "not-a-date", "2026-01-02T00:00Z")).rejects.toThrow(
+      InvalidBackfillRangeError,
+    );
+  });
+
+  it("skips when the pipeline is paused", async () => {
+    await env.DB.prepare(`UPDATE pipeline_config SET paused = 1 WHERE pipeline = 'carbon'`).run();
+
+    const result = await runCarbonBackfill(env as never, "2026-01-01T00:00Z", "2026-01-02T00:00Z");
     expect(result.skipped).toBe(true);
 
     await env.DB.prepare(`UPDATE pipeline_config SET paused = 0 WHERE pipeline = 'carbon'`).run();

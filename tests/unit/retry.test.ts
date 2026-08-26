@@ -27,9 +27,9 @@ describe("retryWithBackoff", () => {
     const sleep = vi.fn().mockResolvedValue(undefined);
     const err = new Error("permanently down");
     const fn = vi.fn().mockRejectedValue(err);
-    await expect(retryWithBackoff(fn, { sleep, maxAttempts: 3 })).rejects.toThrow(
-      "permanently down",
-    );
+    await expect(
+      retryWithBackoff(fn, { sleep, maxAttempts: 3 }),
+    ).rejects.toThrow("permanently down");
     expect(fn).toHaveBeenCalledTimes(3);
   });
 
@@ -41,7 +41,12 @@ describe("retryWithBackoff", () => {
     });
     const fn = vi.fn().mockRejectedValue(new Error("down"));
     await expect(
-      retryWithBackoff(fn, { sleep, maxAttempts: 4, baseDelayMs: 100, maxDelayMs: 300 }),
+      retryWithBackoff(fn, {
+        sleep,
+        maxAttempts: 4,
+        baseDelayMs: 100,
+        maxDelayMs: 300,
+      }),
     ).rejects.toThrow();
     expect(delays).toHaveLength(3);
     // Each delay includes up to 25% jitter, so allow that margin above the

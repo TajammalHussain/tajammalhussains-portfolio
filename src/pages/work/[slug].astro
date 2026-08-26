@@ -38,7 +38,7 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={data.title} description={data.summary} jsonLd={jsonLd}>
+<BaseLayout title={data.title} description={data.summary} ogImage={`/og/work/${slug}.png`} jsonLd={jsonLd}>
   <article class="mx-auto max-w-3xl">
     <a href="/work" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
       >← All case studies</a

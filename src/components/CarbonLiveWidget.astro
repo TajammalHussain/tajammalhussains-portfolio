@@ -10,6 +10,7 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
   id="carbon-live-widget"
   data-api-base={apiBase}
   class="rounded-lg border border-[var(--color-border)] p-6"
+  style="min-height: 620px"
 >
   <div id="carbon-loading" class="text-sm text-[var(--color-fg-muted)]">Loading live data…</div>
   <div id="carbon-error" class="hidden text-sm text-[var(--color-danger)]"></div>
@@ -38,12 +39,18 @@ const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
 </div>
 
 <script>
+  // fg shades are deliberately darker than the site's usual accent shade for
+  // each colour (e.g. emerald-700 not emerald-600) — the lighter shade only
+  // reaches ~3.6:1 against these light backgrounds, failing WCAG AA's 4.5:1;
+  // this only surfaces in axe-core once the *real* live index band happens
+  // to land on a given colour, so all three were checked, not just the one
+  // that first triggered a test failure.
   const BAND_COLORS: Record<string, { bg: string; fg: string }> = {
-    "very low": { bg: "#ECFDF5", fg: "#059669" },
-    low: { bg: "#ECFDF5", fg: "#059669" },
-    moderate: { bg: "#FFFBEB", fg: "#D97706" },
-    high: { bg: "#FEF2F2", fg: "#DC2626" },
-    "very high": { bg: "#FEF2F2", fg: "#DC2626" },
+    "very low": { bg: "#ECFDF5", fg: "#047857" },
+    low: { bg: "#ECFDF5", fg: "#047857" },
+    moderate: { bg: "#FFFBEB", fg: "#92400E" },
+    high: { bg: "#FEF2F2", fg: "#B91C1C" },
+    "very high": { bg: "#FEF2F2", fg: "#B91C1C" },
   };
 
   async function initCarbonWidget() {

@@ -1,0 +1,152 @@
+---
+// Lazy island: Chart.js is only fetched here. Renders real data from
+// Pipeline 2's public API — no fixture. If the API is unreachable or has no
+// data yet, this says so plainly rather than fabricating numbers (spec:
+// graceful degradation).
+const apiBase = import.meta.env.PUBLIC_API_BASE_URL ?? "http://localhost:8787";
+---
+
+<div
+  id="housing-live-widget"
+  data-api-base={apiBase}
+  class="rounded-lg border border-[var(--color-border)] p-6"
+  style="min-height: 900px"
+>
+  <div id="housing-loading" class="text-sm text-[var(--color-fg-muted)]">Loading live data…</div>
+  <div id="housing-error" class="hidden text-sm text-[var(--color-danger)]"></div>
+  <div id="housing-content" class="hidden">
+    <p id="housing-period" class="text-xs font-semibold uppercase tracking-wide text-[var(--color-fg-muted)]"></p>
+
+    <div class="mt-6 overflow-x-auto" tabindex="0" role="region" aria-label="Regional average house prices">
+      <table class="w-full min-w-[520px] border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-[var(--color-border)] text-left text-xs uppercase text-[var(--color-fg-muted)]">
+            <th class="py-2 pr-4">Region</th>
+            <th class="py-2 pr-4">Average price</th>
+            <th class="py-2 pr-4">MoM change</th>
+            <th class="py-2 pr-4">YoY change</th>
+          </tr>
+        </thead>
+        <tbody id="housing-region-rows"></tbody>
+      </table>
+    </div>
+
+    <div class="mt-8">
+      <canvas id="housing-price-chart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  const REGION_LABELS: Record<string, string> = {
+    "united-kingdom": "United Kingdom",
+    england: "England",
+    wales: "Wales",
+    scotland: "Scotland",
+    "northern-ireland": "Northern Ireland",
+    london: "London",
+    "south-east": "South East",
+    "south-west": "South West",
+    "east-of-england": "East of England",
+    "east-midlands": "East Midlands",
+    "west-midlands": "West Midlands",
+    "north-west": "North West",
+    "north-east": "North East",
+    "yorkshire-and-the-humber": "Yorkshire and the Humber",
+  };
+
+  interface RegionalGoldRow {
+    period: string;
+    region: string;
+    average_price: number;
+    mom_change_pct: number | null;
+    yoy_change_pct: number | null;
+  }
+
+  function formatGBP(n: number): string {
+    return new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(n);
+  }
+  function formatPct(n: number | null): string {
+    if (n === null) return "—";
+    const sign = n > 0 ? "+" : "";
+    return `${sign}${n.toFixed(1)}%`;
+  }
+
+  async function initHousingWidget() {
+    const root = document.getElementById("housing-live-widget");
+    if (!root) return;
+    const apiBase = root.dataset.apiBase ?? "";
+    const loadingEl = document.getElementById("housing-loading")!;
+    const errorEl = document.getElementById("housing-error")!;
+    const contentEl = document.getElementById("housing-content")!;
+
+    try {
+      const res = await fetch(`${apiBase}/api/v1/housing/regional`);
+      if (!res.ok) {
+        throw new Error(`API returned ${res.status} — pipeline may not have run yet`);
+      }
+      const { data }: { data: RegionalGoldRow[] } = await res.json();
+      if (data.length === 0) throw new Error("no data ingested yet");
+
+      // The API returns the most recent rows across all regions ordered by
+      // period desc; take only the latest period's rows for the headline
+      // table/chart, in case older periods are mixed in.
+      const latestPeriod = data[0]!.period;
+      const latestRows = data.filter((r) => r.period === latestPeriod);
+
+      document.getElementById("housing-period")!.textContent =
+        `HM Land Registry UK HPI — ${latestPeriod} (published with a ~2 month lag; this is normal, not stale)`;
+
+      const rowsEl = document.getElementById("housing-region-rows")!;
+      rowsEl.innerHTML = latestRows
+        .map(
+          (r) => `
+        <tr class="border-b border-[var(--color-border)]">
+          <td class="py-2 pr-4">${REGION_LABELS[r.region] ?? r.region}</td>
+          <td class="py-2 pr-4">${formatGBP(r.average_price)}</td>
+          <td class="py-2 pr-4">${formatPct(r.mom_change_pct)}</td>
+          <td class="py-2 pr-4">${formatPct(r.yoy_change_pct)}</td>
+        </tr>`,
+        )
+        .join("");
+
+      loadingEl.classList.add("hidden");
+      contentEl.classList.remove("hidden");
+
+      const { Chart, registerables } = await import("chart.js");
+      Chart.register(...registerables);
+
+      const sorted = [...latestRows].sort((a, b) => b.average_price - a.average_price);
+      const ctx = (document.getElementById("housing-price-chart") as HTMLCanvasElement).getContext("2d")!;
+      new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: sorted.map((r) => REGION_LABELS[r.region] ?? r.region),
+          datasets: [
+            {
+              label: `Average price (${latestPeriod})`,
+              data: sorted.map((r) => r.average_price),
+              backgroundColor: "#2563eb",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          indexAxis: "y",
+          plugins: { title: { display: true, text: "Average price by region" }, legend: { display: false } },
+        },
+      });
+    } catch (err) {
+      loadingEl.classList.add("hidden");
+      errorEl.classList.remove("hidden");
+      errorEl.textContent =
+        err instanceof Error ? `Live data unavailable: ${err.message}` : "Live data unavailable.";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initHousingWidget);
+  } else {
+    initHousingWidget();
+  }
+</script>

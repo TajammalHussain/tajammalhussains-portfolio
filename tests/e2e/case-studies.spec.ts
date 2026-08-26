@@ -3,7 +3,9 @@ import { test, expect } from "@playwright/test";
 test.describe("Case studies", () => {
   test("the work index lists all 6 case studies", async ({ page }) => {
     await page.goto("/work");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Case Studies");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      "Case Studies",
+    );
     const cards = page.locator("ul > li a");
     await expect(cards).toHaveCount(6);
   });
@@ -16,7 +18,14 @@ test.describe("Case studies", () => {
       "Multi-Level Approval Workflow Platform",
     );
 
-    for (const heading of ["Problem", "Constraints", "Approach", "Outcome", "What I'd do differently", "Architecture"]) {
+    for (const heading of [
+      "Problem",
+      "Constraints",
+      "Approach",
+      "Outcome",
+      "What I'd do differently",
+      "Architecture",
+    ]) {
       await expect(page.getByRole("heading", { name: heading })).toBeVisible();
     }
 

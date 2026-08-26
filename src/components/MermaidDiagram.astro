@@ -1,22 +1,22 @@
 ---
-// Markup only — the rendering runtime lives in MermaidRuntime.astro, included
-// once at the layout level. Keeping them separate is deliberate: a <script>
-// tag inside a component that gets rendered through MDX's <Content /> is not
-// reliably included by Astro's script-hoisting pass the way a component used
-// directly in an .astro template is — so the runtime needs to live somewhere
-// guaranteed to run regardless of how a diagram made it onto the page.
+// Rendered to static SVG at build time (see src/lib/mermaid-render.ts) —
+// previously this shipped the ~680KB Mermaid runtime to the browser to draw
+// what is, on this site, always static content; Lighthouse's performance
+// audit caught the real cost of that (683KB, 68% unused, ~800ms bootup on
+// every page with a diagram). No client-side JS runtime is needed anymore.
+import { renderMermaidToSvg } from "@/lib/mermaid-render";
+
 interface Props {
   chart: string;
-  id?: string;
 }
-const { chart, id = `mermaid-${Math.random().toString(36).slice(2, 9)}` } = Astro.props;
+const { chart } = Astro.props;
+const svg = await renderMermaidToSvg(chart);
 ---
 
 <div
-  class="mermaid-wrapper not-prose my-8 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4"
+  class="mermaid-wrapper not-prose my-8 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-subtle)] p-4 [&_svg]:mx-auto"
   tabindex="0"
   role="img"
   aria-label="Architecture diagram"
->
-  <pre class="mermaid" id={id} data-chart={chart}>{chart}</pre>
-</div>
+  set:html={svg}
+/>

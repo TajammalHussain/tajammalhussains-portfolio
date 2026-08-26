@@ -9,5 +9,5 @@
     "jsx": "preserve",
     "verbatimModuleSyntax": true
   },
-  "exclude": ["worker/**", "tests/**", "node_modules", "dist"]
+  "exclude": ["worker/**", "tests/**", "node_modules", "dist", "coverage"]
 }

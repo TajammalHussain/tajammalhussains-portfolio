@@ -1,0 +1,208 @@
+# Sveltia/Decap CMS config. Field names and types here must stay in lockstep
+# with src/content/config.ts's zod schemas — see the note at the top of that
+# file. This is hand-maintained; there is no code generation between the two.
+#
+# TODO(owner): replace `repo` once the real GitHub repository exists (see
+# task tracker — repo creation and the GitHub OAuth App are both blocked on
+# repo-owner action, not code).
+backend:
+  name: github
+  repo: TajammalHussain/portfolio
+  branch: main
+  base_url: https://api.tajammalhussains.uk
+  auth_endpoint: oauth/authorize
+
+# Cloudflare Access, not a CMS login screen, is what actually gates who can
+# reach this page at all — see ARCHITECTURE.md. This just tells the CMS not
+# to render its own (redundant, and non-functional without a real backend)
+# login gate on top of that.
+site_url: https://tajammalhussains.uk
+logo_url: /favicon.svg
+
+media_folder: "src/assets/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: case_studies
+    label: "Case Studies"
+    folder: "src/content/case-studies"
+    extension: "mdx"
+    format: "frontmatter"
+    slug: "{{slug}}"
+    identifier_field: title
+    summary: "{{title}}"
+    # Deliberately no "create" of brand-new entries from the CMS: the body of
+    # each file is hand-written MDX (an `import` plus a `<MermaidDiagram>`
+    # component) which a markdown editor isn't safe to generate or touch —
+    # see the note in src/content/config.ts. Editing the structured fields
+    # below on an *existing* case study is fully safe; the body is never
+    # exposed as a field here, so saving never touches it.
+    create: false
+    delete: false
+    fields:
+      - {
+          label: "Title",
+          name: "title",
+          widget: "string",
+          pattern: ["^.{1,90}$", "Max 90 characters"],
+        }
+      - {
+          label: "Slug",
+          name: "slug",
+          widget: "string",
+          hint: "Must match the .mdx filename — changing this breaks the page's URL.",
+        }
+      - {
+          label: "Summary",
+          name: "summary",
+          widget: "text",
+          pattern: ["^.{1,200}$", "Max 200 characters"],
+        }
+      - {
+          label: "Tech Stack",
+          name: "stack",
+          widget: "list",
+          field: { label: "Item", name: "item", widget: "string" },
+        }
+      - {
+          label: "Featured",
+          name: "featured",
+          widget: "boolean",
+          default: false,
+        }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - {
+          label: "Publish Date",
+          name: "publishDate",
+          widget: "datetime",
+          type: "date",
+          format: "YYYY-MM-DD",
+        }
+      - {
+          label: "Reading Time (minutes)",
+          name: "readingTimeMinutes",
+          widget: "number",
+          required: false,
+          value_type: "int",
+        }
+      - {
+          label: "Cover Image",
+          name: "coverImage",
+          widget: "image",
+          required: false,
+        }
+      - { label: "Problem", name: "problem", widget: "text" }
+      - { label: "Constraints", name: "constraints", widget: "text" }
+      - { label: "Approach", name: "approach", widget: "text" }
+      - {
+          label: "Architecture (narrative)",
+          name: "architecture",
+          widget: "text",
+          hint: "The prose description, not the Mermaid diagram — that lives in the file body and isn't CMS-editable.",
+        }
+      - { label: "Outcome", name: "outcome", widget: "text" }
+      - {
+          label: "What I'd Do Differently",
+          name: "retrospective",
+          widget: "text",
+        }
+
+  - name: writing
+    label: "Writing"
+    folder: "src/content/writing"
+    extension: "md"
+    format: "frontmatter"
+    slug: "{{slug}}"
+    identifier_field: title
+    create: true
+    delete: true
+    fields:
+      - {
+          label: "Title",
+          name: "title",
+          widget: "string",
+          pattern: ["^.{1,90}$", "Max 90 characters"],
+        }
+      - {
+          label: "Slug",
+          name: "slug",
+          widget: "string",
+          hint: "Used as the URL — should match the filename.",
+        }
+      - {
+          label: "Excerpt",
+          name: "excerpt",
+          widget: "text",
+          pattern: ["^.{1,200}$", "Max 200 characters"],
+        }
+      - {
+          label: "Tags",
+          name: "tags",
+          widget: "list",
+          default: [],
+          field: { label: "Tag", name: "tag", widget: "string" },
+        }
+      - {
+          label: "Cover Image",
+          name: "coverImage",
+          widget: "image",
+          required: false,
+        }
+      - {
+          label: "Publish Date",
+          name: "publishDate",
+          widget: "datetime",
+          type: "date",
+          format: "YYYY-MM-DD",
+        }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: ventures
+    label: "Ventures"
+    folder: "src/content/ventures"
+    extension: "md"
+    format: "frontmatter"
+    identifier_field: name
+    create: true
+    delete: true
+    fields:
+      - { label: "Name", name: "name", widget: "string" }
+      - {
+          label: "Description",
+          name: "description",
+          widget: "text",
+          pattern: ["^.{1,280}$", "Max 280 characters"],
+        }
+      - { label: "URL", name: "url", widget: "string" }
+      - {
+          label: "Status",
+          name: "status",
+          widget: "select",
+          options: ["active", "paused", "sunset"],
+          default: "active",
+        }
+
+  - name: site_settings
+    label: "Site Settings"
+    files:
+      - name: "site"
+        label: "Global Site Settings"
+        file: "src/content/site-settings/site.yaml"
+        fields:
+          - { label: "Tagline", name: "tagline", widget: "string" }
+          - { label: "Hero Heading", name: "heroHeading", widget: "string" }
+          - { label: "Hero Body", name: "heroBody", widget: "text" }
+          - label: "Social Links"
+            name: "socialLinks"
+            widget: "object"
+            fields:
+              - { label: "GitHub URL", name: "github", widget: "string" }
+              - { label: "LinkedIn URL", name: "linkedin", widget: "string" }
+          - label: "Default Meta Tags"
+            name: "metaDefaults"
+            widget: "object"
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Description", name: "description", widget: "text" }
+          - { label: "CV PDF Path", name: "cvPdfPath", widget: "string" }

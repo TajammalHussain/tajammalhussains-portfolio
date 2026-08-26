@@ -1,0 +1,23 @@
+{
+  "format": "linked-data-api",
+  "version": "0.2",
+  "result": {
+    "_about": "http://landregistry.data.gov.uk/data/ukhpi/region/london/month/2024-06.json",
+    "primaryTopic": {
+      "_about": "http://landregistry.data.gov.uk/data/ukhpi/region/london/month/2024-06",
+      "averagePrice": 556853,
+      "averagePriceDetached": 1117563,
+      "averagePriceExistingProperty": 559555,
+      "averagePriceFlatMaisonette": 452934,
+      "averagePriceNewBuild": 496262,
+      "averagePriceSemiDetached": 685162,
+      "averagePriceTerraced": 618622,
+      "percentageAnnualChange": 0.1,
+      "percentageChange": 0.6,
+      "refMonth": "2024-06",
+      "salesVolume": 6287,
+      "salesVolumeExistingProperty": 5877,
+      "salesVolumeNewBuild": 410
+    }
+  }
+}
