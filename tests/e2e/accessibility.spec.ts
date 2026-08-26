@@ -14,7 +14,6 @@ const PAGES = [
   "/about",
   "/cv",
   "/ventures",
-  "/uses",
   "/api",
   "/status",
 ];

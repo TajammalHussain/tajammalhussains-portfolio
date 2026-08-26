@@ -1,0 +1,28 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="Page Not Found" description="That page doesn't exist." noIndex>
+  <div class="flex flex-col gap-6 py-16 text-center sm:py-24">
+    <p class="text-sm font-medium uppercase tracking-wide text-[var(--color-accent)]">404</p>
+    <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Page not found</h1>
+    <p class="mx-auto max-w-md text-[var(--color-fg-muted)]">
+      There's nothing here — the page may have moved or been removed. It's not faking a 200 to
+      cover for it.
+    </p>
+    <div class="flex flex-wrap justify-center gap-3 pt-2">
+      <a
+        href="/"
+        class="rounded-md bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-fg)] transition-opacity hover:opacity-90"
+      >
+        Back to home
+      </a>
+      <a
+        href="/work"
+        class="rounded-md border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold transition-colors hover:border-[var(--color-accent)] hover:text-[var(--color-accent)]"
+      >
+        View case studies
+      </a>
+    </div>
+  </div>
+</BaseLayout>

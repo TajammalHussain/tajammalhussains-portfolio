@@ -3,6 +3,15 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# ─── Custom domain ──────────────────────────────────────────────────────────
+# Routes api.tajammalhussains.uk to this Worker. Requires the zone
+# (tajammalhussains.uk) to already be active on this Cloudflare account —
+# `custom_domain = true` has Cloudflare provision the DNS record and TLS
+# cert automatically, rather than needing a manually-created CNAME.
+[[routes]]
+pattern = "api.tajammalhussains.uk"
+custom_domain = true
+
 # ─── Cron Triggers ────────────────────────────────────────────────────────────
 # Cloudflare passes the matching cron expression as `event.cron` into the
 # scheduled() handler, which dispatches to the right pipeline (see src/index.ts).

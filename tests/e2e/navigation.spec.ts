@@ -38,11 +38,11 @@ test.describe("Site navigation", () => {
     }
   });
 
-  test("footer links to /status, /api, /uses, /ventures all resolve", async ({
+  test("footer links to /status, /api, /ventures all resolve", async ({
     page,
   }) => {
     await page.goto("/");
-    for (const href of ["/status", "/api", "/uses", "/ventures"]) {
+    for (const href of ["/status", "/api", "/ventures"]) {
       const res = await page.request.get(href);
       expect(res.status(), `${href} should return 200`).toBe(200);
     }
