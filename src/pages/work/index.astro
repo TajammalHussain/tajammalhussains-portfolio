@@ -11,6 +11,12 @@ const caseStudies = (
   (a: CollectionEntry<"case-studies">, b: CollectionEntry<"case-studies">) =>
     b.data.publishDate.valueOf() - a.data.publishDate.valueOf(),
 );
+
+const stackTags = Array.from(new Set(caseStudies.flatMap((cs) => cs.data.stack))).sort((a, b) =>
+  a.localeCompare(b),
+);
+
+const firstSentence = (s: string) => s.trim().split(/(?<=[.!?])\s/)[0];
 ---
 
 <BaseLayout
@@ -24,13 +30,26 @@ const caseStudies = (
     detail is intentionally left out; the engineering decisions are not.
   </p>
 
-  <ul class="mt-10 grid gap-6 sm:grid-cols-2">
+  <div class="mt-8 flex flex-wrap gap-2" role="group" aria-label="Filter case studies by stack">
+    <button type="button" class="filter-chip" data-filter="all" aria-pressed="true">
+      All
+    </button>
+    {
+      stackTags.map((tag) => (
+        <button type="button" class="filter-chip" data-filter={tag.toLowerCase()} aria-pressed="false">
+          {tag}
+        </button>
+      ))
+    }
+  </div>
+
+  <ul id="case-study-grid" class="mt-6 grid gap-6 sm:grid-cols-2">
     {
       caseStudies.map((cs) => (
-        <li>
+        <li data-stack={cs.data.stack.map((t) => t.toLowerCase()).join(" ")}>
           <a
             href={`/work/${cs.slug}`}
-            class="flex h-full flex-col rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+            class="card-hover group flex h-full flex-col rounded-lg border border-[var(--color-border)] p-6"
           >
             <h2 class="font-semibold">{cs.data.title}</h2>
             <p class="mt-2 flex-1 text-sm text-[var(--color-fg-muted)]">{cs.data.summary}</p>
@@ -41,6 +60,11 @@ const caseStudies = (
                 </span>
               ))}
             </div>
+            <p
+              class="mt-0 max-h-0 overflow-hidden font-mono text-xs text-[var(--color-data)] opacity-0 transition-all duration-200 group-hover:mt-3 group-hover:max-h-12 group-hover:border-t group-hover:border-dashed group-hover:border-[var(--color-border)] group-hover:pt-3 group-hover:opacity-100 group-focus-visible:mt-3 group-focus-visible:max-h-12 group-focus-visible:border-t group-focus-visible:border-dashed group-focus-visible:border-[var(--color-border)] group-focus-visible:pt-3 group-focus-visible:opacity-100"
+            >
+              ↳ {firstSentence(cs.data.outcome)}
+            </p>
             {cs.data.readingTimeMinutes && (
               <p class="mt-4 text-xs text-[var(--color-fg-muted)]">
                 {cs.data.readingTimeMinutes} min read
@@ -51,4 +75,31 @@ const caseStudies = (
       ))
     }
   </ul>
+
+  <p id="filter-empty" class="mt-10 hidden text-sm text-[var(--color-fg-muted)]">
+    No case studies use that tag yet.
+  </p>
+
+  <script>
+    const buttons = document.querySelectorAll<HTMLButtonElement>(".filter-chip");
+    const items = document.querySelectorAll<HTMLLIElement>("#case-study-grid > li");
+    const emptyState = document.getElementById("filter-empty");
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        buttons.forEach((b) => b.setAttribute("aria-pressed", "false"));
+        btn.setAttribute("aria-pressed", "true");
+
+        const filter = btn.dataset.filter ?? "all";
+        let visibleCount = 0;
+        items.forEach((li) => {
+          const stacks = (li.dataset.stack ?? "").split(" ");
+          const matches = filter === "all" || stacks.includes(filter);
+          li.hidden = !matches;
+          if (matches) visibleCount += 1;
+        });
+        emptyState?.classList.toggle("hidden", visibleCount > 0);
+      });
+    });
+  </script>
 </BaseLayout>

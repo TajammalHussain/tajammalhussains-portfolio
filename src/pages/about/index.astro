@@ -1,7 +1,10 @@
 ---
+import { Image } from "astro:assets";
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { SITE } from "@/lib/site";
 import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
+import SocialLinks from "@/components/SocialLinks.astro";
+import profilePhoto from "@/assets/profile.jpg";
 ---
 
 <BaseLayout
@@ -9,7 +12,21 @@ import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
   description="Background, education, certifications, and career trajectory for Tajammal Hussain — Data Analyst progressing toward Data Engineer, based in Derby, UK."
 >
   <div class="mx-auto max-w-3xl">
-    <h1 class="text-3xl font-semibold tracking-tight">About</h1>
+    <div class="flex items-center gap-4">
+      <Image
+        src={profilePhoto}
+        alt={SITE.name}
+        width={96}
+        height={96}
+        class="h-24 w-24 rounded-full border border-[var(--color-border)] object-cover"
+      />
+      <div>
+        <h1 class="text-3xl font-semibold tracking-tight">About</h1>
+        <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
+          {SITE.jobTitle} → {SITE.targetRole} · {SITE.location}
+        </p>
+      </div>
+    </div>
 
     <section class="mt-8">
       <p class="text-lg text-[var(--color-fg-muted)]">
@@ -24,6 +41,9 @@ import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
         non-technical users, and pragmatic engineering under real constraints that any regulated
         or legacy-heavy sector — fintech, retail, healthcare, the public sector — will ask for.
       </p>
+      <div class="mt-6">
+        <SocialLinks />
+      </div>
     </section>
 
     <section class="mt-12" aria-labelledby="education-heading">
@@ -78,11 +98,6 @@ import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
         href="/cv"
         class="rounded-md bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-[var(--color-accent-fg)] hover:opacity-90"
         >View full CV</a
-      >
-      <a
-        href={SITE.sameAs[1]}
-        class="rounded-md border border-[var(--color-border)] px-5 py-2.5 text-sm font-semibold hover:border-[var(--color-accent)]"
-        >GitHub</a
       >
     </section>
   </div>

@@ -1,20 +1,22 @@
 ---
 import { SITE } from "@/lib/site";
+import SocialLinks from "./SocialLinks.astro";
 const year = new Date().getFullYear();
 ---
 
 <footer class="border-t border-[var(--color-border)]">
-  <div
-    class="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm text-[var(--color-fg-muted)] sm:flex-row sm:items-center sm:justify-between sm:px-6"
-  >
-    <p>&copy; {year} {SITE.name}. {SITE.location}.</p>
-    <nav aria-label="Footer" class="flex flex-wrap gap-x-6 gap-y-2">
-      <a href="/status" class="hover:text-[var(--color-accent)]">System Status</a>
-      <a href="/api" class="hover:text-[var(--color-accent)]">API</a>
-      <a href="/uses" class="hover:text-[var(--color-accent)]">Uses</a>
-      <a href="/ventures" class="hover:text-[var(--color-accent)]">Ventures</a>
-      <a href={SITE.sameAs[1]} class="hover:text-[var(--color-accent)]" rel="me">GitHub</a>
-      <a href={SITE.sameAs[0]} class="hover:text-[var(--color-accent)]" rel="me">LinkedIn</a>
-    </nav>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+    <SocialLinks />
+    <div
+      class="mt-8 flex flex-col gap-4 border-t border-[var(--color-border)] pt-6 text-sm text-[var(--color-fg-muted)] sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>&copy; {year} {SITE.name}. {SITE.location}.</p>
+      <nav aria-label="Footer" class="flex flex-wrap gap-x-6 gap-y-2">
+        <a href="/status" class="hover:text-[var(--color-accent)]">System Status</a>
+        <a href="/api" class="hover:text-[var(--color-accent)]">API</a>
+        <a href="/uses" class="hover:text-[var(--color-accent)]">Uses</a>
+        <a href="/ventures" class="hover:text-[var(--color-accent)]">Ventures</a>
+      </nav>
+    </div>
   </div>
 </footer>

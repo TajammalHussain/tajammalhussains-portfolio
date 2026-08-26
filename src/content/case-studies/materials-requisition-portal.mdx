@@ -1,0 +1,92 @@
+---
+title: "Materials Requisition Portal"
+slug: "materials-requisition-portal"
+summary: >
+  A full-stack Go/React requisition system built around cleaning years of
+  scattered supplier spreadsheets into one searchable product catalogue.
+stack: ["Go", "PostgreSQL", "React", "REST APIs", "Docker"]
+featured: true
+draft: false
+publishDate: 2026-08-26
+readingTimeMinutes: 7
+problem: >
+  Site staff needed a reliable way to request materials against a real
+  product catalogue, but the catalogue itself didn't exist as one thing —
+  it was several people's personal spreadsheets, each with its own column
+  headers, missing fields, and update cadence. There was no full-text
+  search, no single source of truth for what a manufacturer or product
+  code actually referred to, and no record connecting a request back to
+  what the catalogue said at the time it was made.
+constraints: >
+  The real spreadsheets people actually had were messy in ways a clean
+  import form can't assume away: the same field showed up as "Manufacturer",
+  "Brand", or "Make" depending on who built the sheet; manufacturer links
+  were often buried as cell hyperlinks rather than visible text; and with
+  thousands of rows, validation had to happen without blocking day-to-day
+  submissions while the catalogue was still being cleaned up. On top of
+  that, three roles — site staff, office/admin, and a single super admin —
+  needed different visibility without duplicating data, and cross-project
+  visibility had to be opt-in per user, never global.
+approach: >
+  I built a Go 1.22 backend (net/http, no framework, raw SQL via pgx — no
+  ORM) over PostgreSQL, with a React/Vite frontend, deployed as a single
+  Docker container. The catalogue import pipeline maps inconsistent
+  real-world spreadsheet headers onto one schema using alias matching, so
+  "Manufacturer", "Brand", and "Make" all land in the same field without
+  anyone renaming their spreadsheet first — and it reads hyperlink targets
+  directly out of the Excel cell data, not just the visible text, to
+  recover manufacturer links that would otherwise be lost. Imports support
+  both append and full-replace modes, so the catalogue could be cleaned up
+  iteratively instead of needing one perfect upload.
+architecture: >
+  Catalogue items live in Postgres with a GIN full-text index across
+  product name, code, overview, material type, and manufacturer, so search
+  stays fast at real scale. Submission line items snapshot every product
+  field from the catalogue at the moment of submission rather than holding
+  a foreign key back to it — a requisition made against a product stays
+  exactly as it was even if that catalogue entry is later edited or
+  removed. Role-gated access (Normal User / Admin / Super Admin) is
+  enforced through JWT middleware, and a Super-Admin-gated "Shared Project
+  Logs" feature lets one user see another project's requisition history
+  read-only — opt-in per project, so cross-visibility never becomes
+  cross-visibility-by-default.
+outcome: >
+  What used to be several people's personal spreadsheets became one
+  searchable, versioned catalogue of real products — full-text search
+  across thousands of items in place of manually scanning files, and a
+  complete, point-in-time record of every requisition that doesn't quietly
+  drift if the catalogue changes later. In effect, the system became the
+  backup and source of truth for the catalogue itself, not just a workflow
+  layered on top of it.
+retrospective: >
+  This was the longest build of anything on this site, and in hindsight
+  the reason is that the catalogue-cleaning problem turned out to be bigger
+  than the requisition workflow it was meant to support — alias-based
+  header mapping solved the immediate mess, but I'd time-box the data
+  cleaning as its own phase earlier next time rather than letting it expand
+  inside the app build. I'd also add a proper import preview/diff step: a
+  bad full-replace import today is only recoverable by re-importing the
+  previous file, not by an in-app undo.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram
+  chart={`flowchart LR
+  X[Real-world Excel/CSV\ncatalogue exports] --> M[Alias-based header\nmapping + hyperlink\nextraction]
+  M --> C[(Postgres catalogue_items\nGIN full-text index)]
+  C --> F[React catalogue\nsearch + browse]
+  F --> S[Requisition submission]
+  S --> R[(submission_rows —\nsnapshot, no FK back)]
+  R --> O[Office fields: supplier,\nPO number, delivery]
+  R --> SH[Shared Project Logs\nopt-in, per project]`}
+/>
+
+The decision that mattered most was the snapshot on `submission_rows`: every
+product field is copied onto the requisition at submission time instead of
+being looked up live from the catalogue. It costs a bit of duplication, but
+it means a requisition from six months ago still reads exactly as it did the
+day it was submitted, even after the catalogue entry behind it has since been
+edited, re-categorised, or deleted.

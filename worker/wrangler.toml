@@ -21,7 +21,7 @@ crons = [
 [[d1_databases]]
 binding = "DB"
 database_name = "portfolio_db"
-database_id = "REPLACE_WITH_REAL_D1_ID"
+database_id = "5b3cf647-dfe9-4d64-a107-a8a2b238f2ec"
 migrations_dir = "migrations"
 
 # ─── R2 (bronze raw payload landing zone) ──────────────────────────────────────
@@ -32,11 +32,21 @@ bucket_name = "portfolio-bronze"
 # ─── KV (public API response cache) ────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "REPLACE_WITH_REAL_KV_ID"
+id = "0827e770dc9d46a9bb88640ea157d387"
 
 # ─── Non-secret vars ────────────────────────────────────────────────────────────
+# ENVIRONMENT is "production" here deliberately: `deploy` runs plain
+# `wrangler deploy` with no --env flag, so this top-level [vars] block is
+# exactly what ships to production — there is no separate named environment
+# overriding it. verifyAccess() (src/lib/access.ts) only skips real
+# Cloudflare Access verification when ENVIRONMENT === "development"; leaving
+# this as "development" here would mean a production deploy with Access not
+# yet configured fails OPEN (anyone gets an authenticated admin session)
+# instead of failing closed (401). For local `wrangler dev`, set
+# ENVIRONMENT=development in worker/.dev.vars (gitignored, never committed —
+# see .dev.vars.example) to restore the local convenience bypass.
 [vars]
-ENVIRONMENT = "development"
+ENVIRONMENT = "production"
 # Guardrails so a runaway job cannot exceed Cloudflare's free-tier limits
 # (see README for the specific numbers assumed).
 MAX_BACKFILL_DAYS_PER_RUN = "31"

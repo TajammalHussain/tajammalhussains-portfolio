@@ -1,0 +1,93 @@
+---
+// Branded pill buttons (icon + label, brand-colour background, hover lift) —
+// styled after https://hennabyeish.uk/'s social buttons, per the owner's
+// request, adapted with two real fixes: Facebook's exact brand blue
+// (#1877F2) and Instagram's stock yellow→pink→purple gradient both fail
+// WCAG AA contrast (4.5:1) against the white icon/label text — 4.23:1 and as
+// low as 1.51:1 at the yellow stop, respectively. Swapped for a slightly
+// darker blue and a yellow-free pink→purple gradient that hold >=5.2:1
+// across the whole gradient, verified by sampling it at 25% steps — same
+// recognisable brand feel, but this site's own accessibility bar (zero
+// axe-core violations, checked in tests/e2e/accessibility.spec.ts) doesn't
+// bend for a reference design.
+import { SOCIAL_LINKS } from "@/lib/site";
+
+interface Props {
+  class?: string;
+}
+const { class: className = "" } = Astro.props;
+
+const ICON_PATHS: Record<(typeof SOCIAL_LINKS)[number]["platform"], string> = {
+  linkedin:
+    "M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z",
+  github:
+    "M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.955-.266 1.98-.399 3-.405 1.02.006 2.045.139 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12",
+  facebook:
+    "M22 12a10 10 0 1 0-11.6 9.9v-7H8v-2.9h2.4V9.8c0-2.4 1.4-3.7 3.6-3.7 1 0 2.1.2 2.1.2v2.3h-1.2c-1.2 0-1.6.7-1.6 1.5v1.8H16l-.4 2.9h-2.1v7A10 10 0 0 0 22 12Z",
+  instagram:
+    "M12 2.2c3.2 0 3.6 0 4.9.07 1.2.06 2 .25 2.7.53.7.28 1.3.65 1.9 1.25.6.6.97 1.2 1.25 1.9.28.7.47 1.5.53 2.7.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.06 1.2-.25 2-.53 2.7-.28.7-.65 1.3-1.25 1.9-.6.6-1.2.97-1.9 1.25-.7.28-1.5.47-2.7.53-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.06-2-.25-2.7-.53-.7-.28-1.3-.65-1.9-1.25-.6-.6-.97-1.2-1.25-1.9-.28-.7-.47-1.5-.53-2.7C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.06-1.2.25-2 .53-2.7.28-.7.65-1.3 1.25-1.9.6-.6 1.2-.97 1.9-1.25.7-.28 1.5-.47 2.7-.53C8.4 2.2 8.8 2.2 12 2.2zm0 1.8c-3.15 0-3.5 0-4.75.07-.98.04-1.5.2-1.86.34-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.36-.3.88-.34 1.86C3.08 8.5 3.08 8.85 3.08 12s0 3.5.07 4.75c.04.98.2 1.5.34 1.86.18.47.4.8.75 1.15.35.35.68.57 1.15.75.36.14.88.3 1.86.34C8.5 20.92 8.85 20.92 12 20.92s3.5 0 4.75-.07c.98-.04 1.5-.2 1.86-.34.47-.18.8-.4 1.15-.75.35-.35.57-.68.75-1.15.14-.36.3-.88.34-1.86.07-1.25.07-1.6.07-4.75s0-3.5-.07-4.75c-.04-.98-.2-1.5-.34-1.86-.18-.47-.4-.8-.75-1.15-.35-.35-.68-.57-1.15-.75-.36-.14-.88-.3-1.86-.34C15.5 3.08 15.15 3.08 12 3.08zm0 3.4a5.52 5.52 0 110 11.04A5.52 5.52 0 0112 6.48zm0 1.8a3.72 3.72 0 100 7.44 3.72 3.72 0 000-7.44zm5.73-1.98a1.29 1.29 0 11-2.58 0 1.29 1.29 0 012.58 0z",
+  tiktok:
+    "M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6c0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64c0 3.33 2.76 5.7 5.69 5.7c3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48Z",
+  x: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
+};
+
+const BRAND_BG: Record<(typeof SOCIAL_LINKS)[number]["platform"], string> = {
+  linkedin: "#0A66C2",
+  github: "#181717",
+  facebook: "#0C55B8", // darkened from Facebook's #1877F2 — see contrast note above
+  instagram: "linear-gradient(135deg, #C7238A, #6228D7)", // yellow stop dropped — see contrast note above
+  tiktok: "#000000",
+  x: "#000000",
+};
+---
+
+<ul class:list={["flex flex-wrap gap-3", className]}>
+  {
+    SOCIAL_LINKS.map((s) => (
+      <li>
+        <a
+          href={s.url}
+          target="_blank"
+          rel="me noopener noreferrer"
+          class="social-pill"
+          style={`background:${BRAND_BG[s.platform]}`}
+          aria-label={`${s.label} (opens in a new tab)`}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d={ICON_PATHS[s.platform]} />
+          </svg>
+          <span>{s.label}</span>
+        </a>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .social-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #fff;
+    box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+    border: 1px solid rgb(255 255 255 / 10%);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .social-pill:hover,
+  .social-pill:focus-visible {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 10px 24px rgb(0 0 0 / 28%);
+  }
+  .social-pill svg {
+    width: 18px;
+    height: 18px;
+    fill: #fff;
+    flex-shrink: 0;
+  }
+</style>

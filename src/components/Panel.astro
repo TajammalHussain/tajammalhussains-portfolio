@@ -1,0 +1,78 @@
+---
+// Fixed-dark "instrument panel" surface for content that is genuinely
+// staged (a real bronze/silver/gold pipeline) — deliberately independent of
+// the page's light/dark toggle, the same way a terminal or status board
+// doesn't repaint itself with the OS theme. Do not reach for this on content
+// that isn't actually pipeline-shaped (e.g. case studies) — the stage strip
+// is a structural claim, not decoration.
+interface Props {
+  eyebrow: string;
+  stages: string[];
+}
+const { eyebrow, stages } = Astro.props;
+---
+
+<div class="panel">
+  <p class="panel-eyebrow">{eyebrow}</p>
+  <div class="panel-stages">
+    {
+      stages.map((stage, i) => (
+        <>
+          <span class="panel-stage">{stage}</span>
+          {i < stages.length - 1 && (
+            <span class="panel-arrow" aria-hidden="true">
+              →
+            </span>
+          )}
+        </>
+      ))
+    }
+  </div>
+  <div class="panel-body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .panel {
+    --panel-bg: #0b1120;
+    --panel-line: #1f2937;
+    --panel-ink: #e2e8f0;
+    --panel-ink-soft: #94a3b8;
+    --panel-accent: #7dd3fc;
+    background: var(--panel-bg);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+  }
+  .panel-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--panel-accent);
+  }
+  .panel-stages {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .panel-stage {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    color: var(--panel-ink-soft);
+  }
+  .panel-arrow {
+    color: var(--panel-line);
+    font-size: 0.72rem;
+  }
+  .panel-body:not(:empty) {
+    margin-top: 1rem;
+  }
+</style>

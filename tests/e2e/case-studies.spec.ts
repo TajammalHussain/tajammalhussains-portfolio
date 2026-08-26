@@ -6,7 +6,9 @@ test.describe("Case studies", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
       "Case Studies",
     );
-    const cards = page.locator("ul > li a");
+    // Scoped to <main> — the footer's social-links pills are also an
+    // <ul><li><a> list, so an unscoped locator here would double-count them.
+    const cards = page.locator("main ul > li a");
     await expect(cards).toHaveCount(6);
   });
 

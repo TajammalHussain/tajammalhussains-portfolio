@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Tailwind's `dark:` variant defaults to the OS-level prefers-color-scheme
+   media query. This site's theme toggle instead sets [data-theme="dark"]
+   directly on <html> (see BaseLayout's pre-paint script) and can disagree
+   with the OS — without this, every `dark:` utility (prose-invert on case
+   studies/writing, status-badge colours) silently no-ops whenever someone
+   picks a theme that doesn't match their OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Design tokens — restrained, high-contrast, one accent colour.
  * Reference points: Stripe docs, Linear, Vercel. Light/dark via [data-theme],
@@ -28,6 +36,17 @@
      (4.5:1) for normal-size text. #92400e (amber-800) clears it with margin. */
   --color-warning: #92400e;
   --color-danger: #dc2626;
+  /* Low-opacity accent tint for decorative backgrounds only (hero glow,
+     card hover shadow) — never used for text/border contrast, so it doesn't
+     need its own WCAG check. */
+  --color-accent-glow: rgb(37 99 235 / 14%);
+  --color-accent-tint: #eff6ff;
+  /* Second accent, reserved for readings/measurements (chart lines, hover
+     metric reveals, filter state) — kept out of buttons/links so "this is a
+     control" (accent) stays visually distinct from "this is a data point"
+     (data). #0e7490 (cyan-700) clears 4.5:1 against white; cyan-600 doesn't. */
+  --color-data: #0e7490;
+  --color-data-tint: #ecfeff;
   color-scheme: light;
 }
 
@@ -40,6 +59,10 @@
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
+  --color-accent-glow: rgb(59 130 246 / 22%);
+  --color-accent-tint: #1e293b;
+  --color-data: #22d3ee;
+  --color-data-tint: #0b2a30;
   color-scheme: dark;
 }
 
@@ -53,6 +76,10 @@
     --color-success: #34d399;
     --color-warning: #fbbf24;
     --color-danger: #f87171;
+    --color-accent-glow: rgb(59 130 246 / 22%);
+    --color-accent-tint: #1e293b;
+    --color-data: #22d3ee;
+    --color-data-tint: #0b2a30;
     color-scheme: dark;
   }
 }
@@ -91,4 +118,61 @@ body {
   .no-print {
     display: none !important;
   }
+}
+
+/* Shared card-hover treatment for every card grid (case studies, live
+   pipelines, ventures, writing) — a small lift + accent border on hover,
+   rather than each page inventing its own hover state. */
+.card-hover {
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+.card-hover:hover,
+.card-hover:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--color-accent);
+  box-shadow: 0 12px 24px -12px rgb(0 0 0 / 18%);
+}
+
+/* Soft radial accent glow behind a hero section — decorative only, sits
+   behind the content via z-index and never affects text contrast. */
+.hero-glow {
+  position: relative;
+  isolation: isolate;
+}
+.hero-glow::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -15% -10% auto -10%;
+  height: 480px;
+  background: radial-gradient(ellipse 55% 100% at 25% 0%, var(--color-accent-glow), transparent 70%);
+  pointer-events: none;
+}
+
+/* Stack-tag filter chips (/work) — shared so any future filterable grid
+   (writing tags, ventures) can reuse the same control without restyling. */
+.filter-chip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  background: var(--color-bg);
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+.filter-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-fg);
+}
+.filter-chip[aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-accent-fg);
 }

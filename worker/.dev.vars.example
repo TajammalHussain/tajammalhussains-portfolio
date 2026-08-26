@@ -1,0 +1,19 @@
+# Copy to .dev.vars for local `wrangler dev` — never commit the real file
+# (already gitignored). Values here override worker/wrangler.toml's [vars]
+# and provide the secrets that block only exists as comments in wrangler.toml.
+
+# Restores the local convenience bypass in verifyAccess() (src/lib/access.ts)
+# so /api/admin/* works locally without a real Cloudflare Access setup.
+# wrangler.toml's top-level ENVIRONMENT is "production" (that's what actually
+# gets deployed — see the comment there) so this override is required for
+# local dev, not optional.
+ENVIRONMENT=development
+
+# Leave the two below unset locally to use the dev bypass. Set them here only
+# if you specifically want to test real Access verification against a
+# staging Access application from your machine.
+# CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+# CF_ACCESS_AUD=
+
+# GITHUB_OAUTH_CLIENT_SECRET=
+# META_INGEST_SECRET=local-test-secret

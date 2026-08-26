@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import Panel from "@/components/Panel.astro";
 ---
 
 <BaseLayout
@@ -17,37 +18,42 @@ import BaseLayout from "@/layouts/BaseLayout.astro";
     <li>
       <a
         href="/live/carbon"
-        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+        class="group block transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5"
       >
-        <h2 class="font-semibold">UK Grid Carbon Intensity</h2>
-        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
-          Every 30 minutes via Cloudflare Cron Trigger. Bronze → silver → gold → public API.
-        </p>
-        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+        <Panel eyebrow="UK grid carbon intensity" stages={["bronze", "silver", "gold", "api"]}>
+          <p class="text-sm text-slate-300">Every 30 minutes via Cloudflare Cron Trigger.</p>
+          <span class="mt-3 inline-block font-mono text-xs text-sky-300 group-hover:underline">
+            View pipeline →
+          </span>
+        </Panel>
       </a>
     </li>
     <li>
       <a
         href="/live/housing"
-        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+        class="group block transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5"
       >
-        <h2 class="font-semibold">UK House Price Data</h2>
-        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
-          Monthly via Cloudflare Cron Trigger, 14 UK regions. Bronze → silver → gold → public API.
-        </p>
-        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+        <Panel eyebrow="UK house price data" stages={["bronze", "silver", "gold", "api"]}>
+          <p class="text-sm text-slate-300">Monthly via Cloudflare Cron Trigger, 14 UK regions.</p>
+          <span class="mt-3 inline-block font-mono text-xs text-sky-300 group-hover:underline">
+            View pipeline →
+          </span>
+        </Panel>
       </a>
     </li>
     <li>
       <a
         href="/live/meta"
-        class="block rounded-lg border border-[var(--color-border)] p-6 transition-colors hover:border-[var(--color-accent)]"
+        class="group block transition-transform duration-150 hover:-translate-y-0.5 focus-visible:-translate-y-0.5"
       >
-        <h2 class="font-semibold">Site Meta-Pipeline</h2>
-        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
-          Daily self-referential snapshot, plus real deploy/build events from CI. Bronze → silver → public API.
-        </p>
-        <span class="mt-3 inline-block text-sm font-medium text-[var(--color-accent)]">View pipeline →</span>
+        <Panel eyebrow="site meta-pipeline" stages={["bronze", "silver", "api"]}>
+          <p class="text-sm text-slate-300">
+            Daily self-referential snapshot, plus real deploy/build events from CI.
+          </p>
+          <span class="mt-3 inline-block font-mono text-xs text-sky-300 group-hover:underline">
+            View pipeline →
+          </span>
+        </Panel>
       </a>
     </li>
   </ul>
