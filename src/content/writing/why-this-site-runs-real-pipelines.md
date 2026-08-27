@@ -1,5 +1,6 @@
 ---
 title: "Why this site runs real data pipelines instead of describing them"
+seoTitle: "Why This Site Runs Real Pipelines"
 slug: "why-this-site-runs-real-pipelines"
 excerpt: >
   A static portfolio can claim anything. This site's /live section is built

@@ -21,12 +21,6 @@ export const SITE = {
     "https://www.tiktok.com/@hussains_essence",
     "https://x.com/Tajammal72",
   ],
-  keywords: [
-    "data engineer UK",
-    "ETL pipeline developer",
-    "Azure data engineer",
-    "Power BI developer Derby",
-  ],
 } as const;
 
 // Rendered as branded pill buttons by <SocialLinks /> (footer, /about).

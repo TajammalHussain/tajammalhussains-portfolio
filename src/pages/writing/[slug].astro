@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { getCollection, render, type CollectionEntry } from "astro:content";
+import { SITE } from "@/lib/site";
 
 export async function getStaticPaths() {
   const posts = await getCollection(
@@ -17,14 +18,23 @@ const { post } = Astro.props;
 const { Content } = await render(post);
 const { data } = post;
 
+const pageUrl = new URL(`/writing/${post.slug}`, SITE.url).toString();
+const ogImageUrl = new URL(`/og/writing/${post.slug}.png`, SITE.url).toString();
+
 const jsonLd = [
   {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: data.title,
     description: data.excerpt,
+    image: ogImageUrl,
     datePublished: data.publishDate.toISOString(),
-    author: { "@type": "Person", name: "Tajammal Hussain" },
+    // No separate "last updated" field exists in the content schema yet —
+    // defaulting dateModified to publishDate rather than inventing one.
+    dateModified: data.publishDate.toISOString(),
+    mainEntityOfPage: { "@type": "WebPage", "@id": pageUrl },
+    author: { "@type": "Person", name: "Tajammal Hussain", url: SITE.url },
+    publisher: { "@type": "Person", name: "Tajammal Hussain", url: SITE.url },
   },
   {
     "@context": "https://schema.org",
@@ -37,7 +47,12 @@ const jsonLd = [
 ];
 ---
 
-<BaseLayout title={data.title} description={data.excerpt} ogImage={`/og/writing/${post.slug}.png`} jsonLd={jsonLd}>
+<BaseLayout
+  title={data.seoTitle ?? data.title}
+  description={data.excerpt}
+  ogImage={`/og/writing/${post.slug}.png`}
+  jsonLd={jsonLd}
+>
   <article class="mx-auto max-w-3xl">
     <a href="/writing" class="text-sm font-medium text-[var(--color-accent)] hover:underline"
       >← All writing</a

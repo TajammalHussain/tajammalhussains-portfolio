@@ -2,4 +2,20 @@ User-agent: *
 Disallow: /admin/
 Allow: /
 
+# AI assistant and answer-engine crawlers — explicitly allowed, not just
+# caught by the wildcard above. Stated here so a future Disallow added for
+# an unrelated reason doesn't silently take AI visibility down with it.
+User-agent: GPTBot
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+User-agent: anthropic-ai
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Google-Extended
+Allow: /
+User-agent: CCBot
+Allow: /
+
 Sitemap: https://tajammalhussains.uk/sitemap-index.xml

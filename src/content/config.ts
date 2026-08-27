@@ -36,6 +36,12 @@ const writing = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string().max(90),
+      // Optional shorter title for the <title> tag / SERP display. `title`
+      // is the real on-page H1 and can run long for a good headline; SERPs
+      // truncate anywhere past ~60 chars (minus " · Tajammal Hussain"), so a
+      // long title needs a distinct, shorter seoTitle rather than being cut
+      // off mid-word. Falls back to `title` when unset.
+      seoTitle: z.string().max(60).optional(),
       // "slug" is reserved/stripped by Astro before validation — see the
       // same note on the case-studies schema above.
       excerpt: z.string().max(200),

@@ -31,11 +31,16 @@ const personSchema = {
   jobTitle: SITE.jobTitle,
   description: SITE.description,
   url: SITE.url,
+  image: `${SITE.url}/profile.jpg`,
   address: {
     "@type": "PostalAddress",
     addressLocality: "Derby",
     addressCountry: "GB",
   },
+  alumniOf: [
+    { "@type": "CollegeOrUniversity", name: "University of Hertfordshire" },
+    { "@type": "CollegeOrUniversity", name: "University of Muzaffarabad, Kotli Campus" },
+  ],
   knowsAbout: [
     "Data Engineering",
     "ETL/ELT Pipelines",
@@ -44,8 +49,35 @@ const personSchema = {
     "Python",
     "Azure Data Factory",
     "Power BI",
+    "Cloudflare Workers",
+    "Serverless Data Pipelines",
   ],
-  sameAs: SITE.sameAs,
+  hasCredential: [
+    {
+      "@type": "EducationalOccupationalCredential",
+      credentialCategory: "certificate",
+      name: "Google Data Analytics Professional Certificate",
+      recognizedBy: { "@type": "Organization", name: "Google" },
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      credentialCategory: "certificate",
+      name: "Power BI Desktop",
+      recognizedBy: { "@type": "Organization", name: "Microsoft" },
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      credentialCategory: "certificate",
+      name: "Data-Driven Decision Making",
+      recognizedBy: { "@type": "Organization", name: "TestGorilla" },
+    },
+  ],
+  // Trimmed to LinkedIn + GitHub deliberately — sameAs is an entity-resolution
+  // signal ("this is the same person"), not a link directory. SITE.sameAs[0]
+  // and [1] are LinkedIn/GitHub respectively (see cv/index.astro, which
+  // indexes the same two directly); the full 6-item array still powers the
+  // footer's social row for human visitors, a separate concern from schema.
+  sameAs: [SITE.sameAs[0], SITE.sameAs[1]],
 };
 ---
 

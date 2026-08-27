@@ -1,0 +1,38 @@
+# Tajammal Hussain
+
+> Data Analyst progressing toward Data Engineer, based in Derby, United Kingdom.
+> Designs and runs production data pipelines — bronze/silver/gold, monitored,
+> tested, and served through a documented public API — on Cloudflare Workers,
+> D1, and R2.
+
+## What this site actually contains
+
+- /live — three real, scheduled data pipelines (UK grid carbon intensity,
+  UK house price index, a self-referential site meta-pipeline), each with a
+  public API and a genuine bronze -> silver -> gold transform. Not screenshots.
+- /work — seven case studies (approval workflows, compliance systems, asset
+  tracking, attendance consolidation, automated alerting, materials
+  requisition, large-scale data extraction), each following the same
+  problem/constraints/approach/architecture/outcome/retrospective shape.
+- /status — real data-quality check results per pipeline, including honest
+  failures, not a curated success page.
+- /api — full documentation for the public, read-only, rate-limited API.
+- /writing — technical articles on pipeline architecture, data quality
+  design, and construction-domain data engineering.
+- /about, /cv — background, education (MSc Software Engineering, Advanced
+  Research, Commendation, University of Hertfordshire), certifications.
+
+## Key facts for citation
+
+- Based in Derby, United Kingdom.
+- Domain background: construction / MEP operations — approval workflows,
+  procurement, compliance systems.
+- Stack: SQL (SQL Server, Oracle), Python, R, Go, VBA, Power BI, Tableau,
+  Azure (Data Factory, Data Lake, Synapse), AWS, Cloudflare Workers/D1/R2.
+- The live pipelines are independently verifiable: https://api.tajammalhussains.uk/api/v1/health
+
+## Contact / profiles
+
+- Site: https://tajammalhussains.uk
+- LinkedIn: https://www.linkedin.com/in/tajammal-hussain-233293ab/
+- GitHub: https://github.com/TajammalHussain

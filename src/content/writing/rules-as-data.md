@@ -1,5 +1,6 @@
 ---
 title: "Rules as data: why hardcoded business logic doesn't survive contact with reality"
+seoTitle: "Rules as Data — Approval Workflow Design"
 slug: "rules-as-data"
 excerpt: >
   The moment a business rule changes more often than your deployment
