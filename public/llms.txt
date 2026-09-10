@@ -29,10 +29,10 @@
   procurement, compliance systems.
 - Stack: SQL (SQL Server, Oracle), Python, R, Go, VBA, Power BI, Tableau,
   Azure (Data Factory, Data Lake, Synapse), AWS, Cloudflare Workers/D1/R2.
-- The live pipelines are independently verifiable: https://api.tajammalhussains.uk/api/v1/health
+- The live pipelines are independently verifiable: https://api.tajammalhussain.co.uk/api/v1/health
 
 ## Contact / profiles
 
-- Site: https://tajammalhussains.uk
+- Site: https://tajammalhussain.co.uk
 - LinkedIn: https://www.linkedin.com/in/tajammal-hussain-233293ab/
 - GitHub: https://github.com/TajammalHussain

@@ -6,7 +6,10 @@ import tailwindcss from "@tailwindcss/vite";
 import { closeMermaidRenderer } from "./src/lib/mermaid-render.ts";
 
 // Full production domain — used for canonical URLs, sitemap, RSS, and OG tags.
-const SITE_URL = "https://tajammalhussains.uk";
+// tajammalhussains.uk still resolves to the same deployment and serves
+// identical content, but this domain is the canonical one search engines
+// and social previews should point to.
+const SITE_URL = "https://tajammalhussain.co.uk";
 
 // Mermaid diagrams render to static SVG at build time via a Playwright-
 // controlled Chromium instance (see src/lib/mermaid-render.ts) — that

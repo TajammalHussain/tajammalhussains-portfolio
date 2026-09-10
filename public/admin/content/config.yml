@@ -9,14 +9,14 @@ backend:
   name: github
   repo: TajammalHussain/portfolio
   branch: main
-  base_url: https://api.tajammalhussains.uk
+  base_url: https://api.tajammalhussain.co.uk
   auth_endpoint: oauth/authorize
 
 # Cloudflare Access, not a CMS login screen, is what actually gates who can
 # reach this page at all — see ARCHITECTURE.md. This just tells the CMS not
 # to render its own (redundant, and non-functional without a real backend)
 # login gate on top of that.
-site_url: https://tajammalhussains.uk
+site_url: https://tajammalhussain.co.uk
 logo_url: /favicon.svg
 
 media_folder: "src/assets/uploads"

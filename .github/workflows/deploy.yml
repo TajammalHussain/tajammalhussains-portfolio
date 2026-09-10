@@ -67,7 +67,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          PUBLIC_API_BASE_URL: https://api.tajammalhussains.uk
+          PUBLIC_API_BASE_URL: https://api.tajammalhussain.co.uk
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
@@ -87,7 +87,7 @@ jobs:
       # secret isn't configured yet, it fails harmlessly on its own.
       - name: POST to /api/meta/report-event
         run: |
-          curl -sf -X POST "https://api.tajammalhussains.uk/api/meta/report-event" \
+          curl -sf -X POST "https://api.tajammalhussain.co.uk/api/meta/report-event" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer ${{ secrets.META_INGEST_SECRET }}" \
             -d "{\"eventType\":\"deploy\",\"commitSha\":\"${{ needs.deploy-worker.outputs.commit_sha }}\",\"deployedBy\":\"github-actions\",\"environment\":\"production\"}"

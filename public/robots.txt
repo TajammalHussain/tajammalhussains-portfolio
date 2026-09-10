@@ -18,4 +18,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://tajammalhussains.uk/sitemap-index.xml
+Sitemap: https://tajammalhussain.co.uk/sitemap-index.xml

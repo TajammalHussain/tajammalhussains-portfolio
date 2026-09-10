@@ -3,7 +3,7 @@
 export const SITE = {
   name: "Tajammal Hussain",
   tagline: "Data infrastructure that runs itself",
-  url: "https://tajammalhussains.uk",
+  url: "https://tajammalhussain.co.uk",
   locale: "en_GB",
   location: "Derby, United Kingdom",
   jobTitle: "Data Analyst",

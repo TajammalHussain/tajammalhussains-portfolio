@@ -9,7 +9,7 @@ flowchart TB
     Ops["/admin/ops — bespoke dashboard"]
     CMS["/admin/content — Sveltia/Decap CMS"]
   end
-  subgraph Worker["Cloudflare Worker — api.tajammalhussains.uk"]
+  subgraph Worker["Cloudflare Worker — api.tajammalhussain.co.uk"]
     PublicAPI["Public API: /api/v1/*"]
     AdminAPI["Admin API: /api/admin/* (Access-gated)"]
     OAuth["/oauth/* — GitHub OAuth proxy for the CMS"]
@@ -131,9 +131,10 @@ Cloudflare, a GitHub repository, and a GitHub OAuth App for the CMS. Once those 
 1. `wrangler d1 create portfolio_db`, `wrangler r2 bucket create portfolio-bronze`,
    `wrangler kv namespace create CACHE_KV` — paste the resulting IDs into `worker/wrangler.toml`
    (currently `REPLACE_WITH_REAL_D1_ID` / `REPLACE_WITH_REAL_KV_ID`).
-2. Create a Cloudflare Access Application covering `https://tajammalhussains.uk/admin/*`, then
+2. Create a Cloudflare Access Application covering `https://tajammalhussain.co.uk/admin/*` (and
+   `https://tajammalhussains.uk/admin/*`, since that domain is also kept live), then
    `wrangler secret put CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD`.
-3. Create a GitHub OAuth App (callback URL `https://api.tajammalhussains.uk/oauth/callback`), set
+3. Create a GitHub OAuth App (callback URL `https://api.tajammalhussain.co.uk/oauth/callback`), set
    `GITHUB_OAUTH_CLIENT_ID` in `worker/wrangler.toml` `[vars]` and
    `wrangler secret put GITHUB_OAUTH_CLIENT_SECRET`.
 4. `wrangler secret put META_INGEST_SECRET` (any random string) — also add it as a GitHub Actions

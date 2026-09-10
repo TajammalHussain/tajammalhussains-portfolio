@@ -3,11 +3,16 @@ main = "src/index.ts"
 compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# ─── Custom domain ──────────────────────────────────────────────────────────
-# Routes api.tajammalhussains.uk to this Worker. Requires the zone
-# (tajammalhussains.uk) to already be active on this Cloudflare account —
+# ─── Custom domains ─────────────────────────────────────────────────────────
+# Routes both api.tajammalhussain.co.uk (primary) and api.tajammalhussains.uk
+# (kept live — see ADR: both apex domains serve the same site) to this
+# Worker. Requires each zone to already be active on this Cloudflare account —
 # `custom_domain = true` has Cloudflare provision the DNS record and TLS
 # cert automatically, rather than needing a manually-created CNAME.
+[[routes]]
+pattern = "api.tajammalhussain.co.uk"
+custom_domain = true
+
 [[routes]]
 pattern = "api.tajammalhussains.uk"
 custom_domain = true
@@ -60,7 +65,7 @@ ENVIRONMENT = "production"
 # (see README for the specific numbers assumed).
 MAX_BACKFILL_DAYS_PER_RUN = "31"
 API_CACHE_TTL_SECONDS = "300"
-ADMIN_ALLOWED_ORIGINS = "https://tajammalhussains.uk,http://localhost:4321"
+ADMIN_ALLOWED_ORIGINS = "https://tajammalhussain.co.uk,https://tajammalhussains.uk,http://localhost:4321"
 # Set once a real GitHub OAuth App exists for the /admin/content CMS (see
 # worker/src/routes/oauth.ts) — client ID is public, safe as a plain var.
 # GITHUB_OAUTH_CLIENT_ID = "REPLACE_WITH_REAL_CLIENT_ID"

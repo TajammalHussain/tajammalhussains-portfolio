@@ -1,4 +1,4 @@
-# tajammalhussains.uk
+# tajammalhussain.co.uk
 
 Personal portfolio for Tajammal Hussain — Data Analyst progressing toward Data Engineer. Built on
 Astro + Tailwind CSS (frontend) and Cloudflare Workers + D1 + R2 + KV (backend), deployed to
