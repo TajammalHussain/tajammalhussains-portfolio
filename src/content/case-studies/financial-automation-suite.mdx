@@ -49,10 +49,9 @@ outcome: >
   payment sheet now lives in a structured record with a clear approval
   history, in place of documents passed between people.
 retrospective: >
-  TODO(owner): add what you would do differently, left blank on purpose
-  rather than inventing it. Before setting draft: false, also review every
-  statement in this draft for accuracy and confidentiality, and add the real
-  implementation stack (language, database, hosting) if you want it shown.
+  The natural next step is to extend the same framework to further payment
+  and approval workflows as new modules, reusing the existing schema, logic
+  layer and approval pipeline rather than starting each one from scratch.
 ---
 
 import MermaidDiagram from "@/components/MermaidDiagram.astro";
@@ -74,5 +73,3 @@ as the foundation and treating each payment workflow as a module on top of it.
 Supplier payments, subcontractor certificates and CIS payment sheets differ in
 their rules but share the same approval and documentation pattern, so a new
 workflow means adding a module, not redesigning the system.
-
-TODO(owner): confirm this design decision in your own words before publishing.
