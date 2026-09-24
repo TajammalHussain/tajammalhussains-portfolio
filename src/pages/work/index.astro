@@ -47,7 +47,7 @@ const firstSentence = (s: string) => s.trim().split(/(?<=[.!?])\s/)[0];
   <ul id="case-study-grid" class="mt-6 grid gap-6 sm:grid-cols-2">
     {
       caseStudies.map((cs) => (
-        <li data-stack={cs.data.stack.map((t) => t.toLowerCase()).join(" ")}>
+        <li data-stack={cs.data.stack.map((t) => t.toLowerCase()).join("|")}>
           <a
             href={`/work/${cs.slug}`}
             class="card-hover group flex h-full flex-col rounded-lg border border-[var(--color-border)] p-6"
@@ -94,7 +94,7 @@ const firstSentence = (s: string) => s.trim().split(/(?<=[.!?])\s/)[0];
         const filter = btn.dataset.filter ?? "all";
         let visibleCount = 0;
         items.forEach((li) => {
-          const stacks = (li.dataset.stack ?? "").split(" ");
+          const stacks = (li.dataset.stack ?? "").split("|");
           const matches = filter === "all" || stacks.includes(filter);
           li.hidden = !matches;
           if (matches) visibleCount += 1;
