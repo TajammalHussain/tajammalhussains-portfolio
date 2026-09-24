@@ -1,0 +1,128 @@
+---
+title: "Sales Performance Analytics Dashboard (Power BI)"
+slug: "sales-performance-dashboard"
+summary: "Interactive Power BI report on a dimensional sales model: ~40 DAX measures, time intelligence, target tracking, what-if pricing and drill-down. Practice project on a public sample retail dataset."
+stack: ["Power BI", "DAX", "Power Query", "Data Modelling"]
+featured: false
+draft: false
+publishDate: 2025-03-20
+readingTimeMinutes: 6
+problem: >
+  The brief was to turn raw retail sales, returns and customer files into a
+  report an executive could use to answer everyday questions: how revenue,
+  orders, profit and returns are trending, how they compare with a target,
+  which categories, products, regions and customer segments drive them, and
+  what would happen if prices changed. The source was a public sample retail
+  dataset (roughly 25,000 orders, 17,000 customers and 290 products over three
+  years) used during Power BI certification study, so this is a practice
+  project: it demonstrates modelling and report-design skills rather than
+  production work for an employer.
+constraints: >
+  Sales arrived as several files that had to be combined, alongside separate
+  lookup files for products, customers, territories and dates, so the data
+  needed a clean, consistent model before any visual could be trusted. Every
+  measure had to stay correct under any combination of slicers and filters,
+  and the same definitions of revenue, profit and return rate had to be used
+  on every page. The report also had to work at two levels: a one-page
+  executive summary, and detail pages for products and customers that people
+  could reach with consistent navigation.
+approach: >
+  I loaded the source files with Power Query, combining the multiple sales
+  files from a folder into a single sales fact table and loading returns as a
+  second fact table beside it. The lookup files became dimension tables joined
+  to both facts with single-direction many-to-one relationships; a second date
+  relationship (stock date) is kept inactive so that order date drives time
+  analysis by default. All measures live in a dedicated measure table, built in
+  layers: base measures (orders, customers, quantity sold and returned,
+  revenue, cost, profit), ratios (return rate, share of all orders and
+  returns, average revenue per customer), time intelligence (year to date,
+  previous-month comparisons, rolling 10-day revenue and 90-day profit),
+  targets with gap measures, and a what-if price adjustment that recalculates
+  revenue and profit. Detail measures for customers only return values when a
+  single customer is selected. On top of the model I built the report pages:
+  an executive dashboard, a map, product and customer detail pages, a
+  report-page tooltip, and analytical pages using Q&A, a decomposition tree and
+  key influencers.
+architecture: >
+  A layered design: source files, Power Query transformations, a dimensional
+  model, a measure layer in DAX, and the report. Two fact tables (sales and
+  returns) share three conformed dimensions (calendar, product, territory), so
+  measures such as return rate work across both facts. The product dimension
+  is a hierarchy (product, subcategory, category) and the customer dimension
+  carries derived attributes such as income level and education category for
+  segmentation. Field-parameter tables let users switch which metric a visual
+  shows, and a what-if parameter table drives the price scenario.
+outcome: >
+  A multi-page interactive report where KPI cards, trend lines, gauges, maps,
+  tables and analytical visuals all read from the same shared measures, so
+  they agree with each other under any slicer selection. Targets are
+  calculated by rule (a fixed uplift on the previous month), so gap-to-target
+  indicators and arrows update automatically as the data changes. Action-button
+  navigation and bookmarks let a viewer move from the executive summary to the
+  product and customer detail pages without leaving the report.
+retrospective: >
+  I would add reconciliation checks between each target measure and the base
+  measure it depends on, and reconcile every KPI back to the source totals
+  before sharing the report. I would also load the model from a governed,
+  scheduled source instead of local files, and add row-level security if the
+  report served more than one audience.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+> **Portfolio note:** this project uses a public sample retail dataset and was
+> built while studying for the Microsoft Power BI Desktop certification. It
+> shows my modelling, DAX and report-design approach, and is not client or
+> employer work.
+
+## Data model
+
+<MermaidDiagram
+  label="Dimensional data model with two fact tables and shared dimensions"
+  chart={`flowchart LR
+  SALES[("Sales data
+fact")]
+  RET[("Returns data
+fact")]
+
+  CUST["Customer"]
+  CAL["Calendar"]
+  PROD["Product"]
+  TERR["Territory"]
+  SUB["Product subcategory"]
+  CAT["Product category"]
+
+  SALES --> CUST
+  SALES -->|"order date"| CAL
+  SALES -.->|"stock date
+(inactive)"| CAL
+  SALES --> PROD
+  SALES --> TERR
+
+  RET -->|"return date"| CAL
+  RET --> PROD
+  RET --> TERR
+
+  PROD --> SUB
+  SUB --> CAT`}
+/>
+
+The two fact tables share the same calendar, product and territory dimensions,
+which is what allows a measure like return rate (returns divided by sales) to
+be sliced by product, region or month consistently. All ~40 DAX measures sit in a separate measure table, built from base measures
+upwards, so each definition is written once and reused everywhere.
+
+## Report structure
+
+- **Executive dashboard:** revenue, orders and returns as KPI cards, a
+  revenue trend, monthly breakdowns and orders by category, with slicers and
+  page navigation.
+- **Map:** performance by country and continent.
+- **Product details:** revenue, orders and profit gauges against targets, plus
+  profit and returns trends.
+- **Customer details:** orders by income level and occupation, and a top
+  customers table that shows per-customer detail on selection.
+- **Category tooltip:** a report-page tooltip showing weekly orders when
+  hovering a category.
+- **Analytical pages:** Q&A, a decomposition tree and key influencers for
+  exploring the drivers behind the headline metrics.
