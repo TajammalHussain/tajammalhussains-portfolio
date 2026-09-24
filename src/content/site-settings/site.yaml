@@ -1,17 +1,18 @@
 tagline: "Data infrastructure that runs itself"
-heroHeading: "I build data pipelines that actually run."
+heroHeading: "I build the data pipelines and systems businesses actually run on."
 heroBody: >
-  Data Analyst progressing toward Data Engineer. Everything under /live on
-  this site is real: scheduled ingestion, a bronze/silver/gold pipeline,
-  monitored data quality, and a documented public API — not a mockup.
+  Data Engineer, Systems Analyst and Development Specialist. I turn manual,
+  spreadsheet-driven processes into production pipelines, APIs and workflow
+  systems. Everything under /live on this site is real: scheduled ingestion, a
+  bronze/silver/gold pipeline, monitored data quality, and a documented public
+  API — not a mockup.
 socialLinks:
   github: "https://github.com/TajammalHussain"
-  # TODO(owner): replace with your real LinkedIn URL before launch
-  linkedin: "https://www.linkedin.com/in/REPLACE-ME"
+  linkedin: "https://www.linkedin.com/in/tajammal-hussain-233293ab/"
 metaDefaults:
-  title: "Tajammal Hussain — Data Engineer"
+  title: "Tajammal Hussain — Data Engineer & Systems Analyst"
   description: >
-    Data Analyst progressing toward Data Engineer. Live, monitored data
-    pipelines, documented case studies, and a public API — built on
-    Cloudflare Workers, D1 and R2.
+    Data Engineer, Systems Analyst and Development Specialist. Live, monitored
+    data pipelines, full-stack systems in Go and React, documented case
+    studies, and a public API — built on Cloudflare Workers, D1 and R2.
 cvPdfPath: "/cv/Tajammal-Hussain-CV.pdf"

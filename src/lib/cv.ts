@@ -250,3 +250,47 @@ export const ADDITIONAL_INFO = [
 export const TRAJECTORY =
   "Four years delivering end-to-end data engineering, automation, and full-stack systems — " +
   "from ETL pipelines and Power BI reporting to Go/React applications on cloud infrastructure.";
+
+// The three disciplines the site is positioned around — rendered on the home
+// page and /about so the positioning reads identically in both places.
+export const DISCIPLINES = [
+  {
+    title: "Data Engineering",
+    blurb:
+      "Pipelines that ingest, validate, transform and serve data reliably — scheduled, monitored, and documented.",
+    capabilities: [
+      "ETL/ELT pipelines and bronze → silver → gold medallion architecture",
+      "Ingestion from 15+ web and system sources into one SQL-backed catalogue",
+      "Data quality checks and pipeline monitoring built into execution",
+      "SQL Server and PostgreSQL design — normalisation, stored procedures, indexing, tuning",
+    ],
+    href: "/live",
+    hrefLabel: "See the live pipelines",
+  },
+  {
+    title: "Development",
+    blurb:
+      "Production backends, APIs and interfaces — built, containerised, and deployed to cloud infrastructure.",
+    capabilities: [
+      "Go REST APIs with JWT authentication over PostgreSQL",
+      "React frontends and Docker deployment (Railway, Cloudflare)",
+      "Workflow automation on Zoho Creator (Deluge) and Python scheduled jobs",
+      "Rules-as-data engines, append-only audit logs, and snapshot-based record design",
+    ],
+    href: "/work/materials-requisition-portal",
+    hrefLabel: "Read the Materials Requisition Portal",
+  },
+  {
+    title: "Systems Analysis",
+    blurb:
+      "Turning ambiguous, paper-and-spreadsheet processes into structured, auditable systems people actually adopt.",
+    capabilities: [
+      "Requirements elicitation, process mapping and stakeholder facilitation",
+      "UAT leadership and Agile delivery across concurrent projects",
+      "Data flow diagrams, field mappings, runbooks and user guides",
+      "Approval, compliance and audit-trail workflow design",
+    ],
+    href: "/work/compliance-certification-system",
+    hrefLabel: "Read the Compliance Workflow System",
+  },
+] as const;
