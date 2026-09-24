@@ -58,15 +58,94 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 ## Architecture
 
+The suite is easiest to understand as two flows: a payment calculation flow
+that produces a payable amount, and an approval workflow that routes the
+resulting certificate.
+
+### Subcontractor payment calculation flow
+
 <MermaidDiagram
-  chart={`flowchart LR
-  A[Payment request\nor certificate] --> B[(Custom data model)]
-  B --> C[Logic layer\nCIS / HMRC / BACS rules]
-  C --> D{Multi-level\napproval pipeline}
-  D -->|approved| E[E-signature\ncaptured]
-  D -->|rejected| F[Returned with\nreason]
-  E --> G[Payment output\ngenerated]`}
+  label="Subcontractor payment calculation flow feeding an approval workflow"
+  chart={`flowchart TD
+  DB[("Subcontractor\ndatabase")] --> SEL["Select subcontractor"]
+  SEL --> PREV["Gross previously\npaid amount"]
+  PREV --> DUE{"Gross payment due"}
+
+  DUE -->|"greater than zero"| TOT["Total gross amount"]
+  TOT --> RETSEL["Retention option:\nrate A / rate B / none / manual entry"]
+  RETSEL --> PBT["Payment before tax"]
+  RETSEL -.-> ACC(("Accumulated retention\ncalculated and stored"))
+  ACC -.-> DB
+
+  DUE -->|"equal to zero"| REL(("Accumulated retention\nprocessed for release"))
+  DB -.-> REL
+  REL --> RELSEL["Release option:\nnone / partial tier 1 / partial tier 2"]
+  RELSEL --> PTR["Total retention\namount payable"]
+
+  PBT --> MAT["Material cost"]
+  PTR --> MAT
+
+  MAT --> V1["1. Standard-rate VAT"]
+  MAT --> V2["2. Zero-rated"]
+  MAT --> V3["3. Reverse charge"]
+
+  V1 --> R1["VAT payable +\ntaxable payment"]
+  V2 --> R2["VAT payable +\ntaxable payment"]
+  V3 --> R3["VAT payable to tax authority +\ntaxable payment to tax authority"]
+
+  R1 --> C1{"CIS tax deduction"}
+  R2 --> C2{"CIS tax deduction"}
+  R3 --> C3{"CIS tax deduction"}
+
+  C1 -->|"standard rate"| PAY["Payable amount"]
+  C1 -->|"zero"| PAY
+  C2 -->|"standard rate"| PAY
+  C2 -->|"zero"| PAY
+  C3 -->|"standard rate"| PAY
+  C3 -->|"zero"| PAY
+
+  PAY --> CERT["Payment certificate\nsubmitted by user"]
+  CERT --> AP1["Approver 1"]
+  CERT --> AP2["Approver 2"]
+  AP1 --> GATE{"Both approved?"}
+  AP2 --> GATE
+  GATE -->|"yes"| FIN["Final approver\nreceives approval email"]`}
 />
+
+The calculation branches on whether a payment is due. When it is, the system
+applies the selected retention option, stores the accumulated retention against
+the subcontractor record, then applies the VAT treatment (standard, zero-rated
+or reverse charge) and the CIS deduction to arrive at the payable amount. When
+nothing is due, the same tax branches run against the accumulated retention
+being released. The payable amount becomes a payment certificate, which only
+reaches the final approver once both approvers have approved.
+
+### Approval workflow with configurable bypass
+
+<MermaidDiagram
+  label="Approval workflow with configurable bypass options"
+  chart={`flowchart TD
+  S{"Bypass any\napproval stage?"}
+
+  S -->|"1"| O1["No bypass\nemail sent to Approver 1, then Approver 2"]
+  S -->|"2"| O2["Bypass Approver 1\nemail sent to Approver 2"]
+  S -->|"3"| O3["Bypass Approver 2\nemail sent to Approver 1"]
+  S -->|"4"| O4["Bypass both approvers\nemail sent to final approver"]
+
+  O1 --> A1["Approver 1 approval"]
+  A1 --> A2["Approver 2 approval"]
+  O2 --> A2b["Approver 2 approval"]
+  O3 --> A1b["Approver 1 approval"]
+
+  A2 -->|"email sent to final approver"| FIN["Final approval\nemail received by final approver"]
+  A2b -->|"email sent to final approver"| FIN
+  A1b -->|"email sent to final approver"| FIN
+  O4 -->|"email sent to final approver"| FIN`}
+/>
+
+Each certificate is submitted with a bypass option that decides which approval
+stages apply. Whichever route is chosen, the record always ends at the final
+approver, and each stage sends its own email notification.
 
 The design decision that mattered most was building the schema and logic layer
 as the foundation and treating each payment workflow as a module on top of it.
