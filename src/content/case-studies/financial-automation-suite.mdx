@@ -1,0 +1,58 @@
+---
+title: "Financial Workflow Automation Suite"
+slug: "financial-automation-suite"
+summary: "Zoho Creator workflow suite for supplier payments, subcontractor payment certificates (CIS/HMRC/BACS logic) and CIS payment sheets, with e-signature and multi-level authorisation."
+stack: ["Zoho Creator", "Deluge", "Workflow Automation", "E-signature"]
+featured: false
+draft: true
+publishDate: 2026-09-24
+readingTimeMinutes: 5
+problem: >
+  Supplier payments, subcontractor payment certificates and CIS payment
+  sheets were produced through manual steps and manual approval chains. Each
+  document had to be assembled by hand, passed between people for sign-off,
+  and reconciled before payment, and the process depended on a dedicated
+  administrative role to keep it moving.
+constraints: >
+  Subcontractor payments carry CIS, HMRC and BACS requirements, so the
+  calculations and outputs had to be correct and traceable rather than
+  approximately right. Approvals needed to support multiple authorisation
+  levels and a signature that could be captured digitally instead of on
+  paper.
+approach: >
+  I designed the suite as a set of structured digital workflows on Zoho
+  Creator, scripted in Deluge. Each workflow replaces a manual approval chain
+  with defined stages: submission, multi-level authorisation, e-signature and
+  payment output. The CIS, HMRC and BACS logic is built into the workflow
+  itself so the correct figures and file outputs are produced by the system
+  rather than assembled by hand.
+architecture: >
+  Three linked workflow applications (supplier payments, subcontractor
+  payment certificates, CIS payment sheets) share the same pattern:
+  structured records, staged authorisation, captured e-signature, and generated
+  output documents.
+outcome: >
+  The workflows eliminated a full administrative role and replaced manual
+  approval chains with structured digital workflows including e-signature and
+  multi-level authorisation.
+retrospective: >
+  TODO(owner): add what you would do differently — left blank on purpose
+  rather than inventing it. Also review every statement in this draft for
+  accuracy and confidentiality before setting draft: false.
+---
+
+import MermaidDiagram from "@/components/MermaidDiagram.astro";
+
+## Architecture
+
+<MermaidDiagram
+  chart={`flowchart LR
+  A[Payment request\nor certificate] --> B[Structured record\nin Zoho Creator]
+  B --> C{Multi-level\nauthorisation}
+  C -->|approved| D[E-signature\ncaptured]
+  C -->|rejected| E[Returned with\nreason]
+  D --> F[CIS / HMRC / BACS\noutput generated]`}
+/>
+
+TODO(owner): add the design decision that mattered most here, in your own
+words, before publishing.

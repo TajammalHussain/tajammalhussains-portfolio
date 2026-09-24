@@ -9,7 +9,7 @@ export const SITE = {
   jobTitle: "Data Engineer",
   headline: "Data Engineer | Systems Analyst | Development Specialist",
   description:
-    "Data Analyst progressing toward Data Engineer. I design and run production data pipelines — end to end, on real infrastructure, monitored and tested — not slideware.",
+    "Data Engineer, Systems Analyst and Development Specialist. I design and run production data pipelines and build the backend systems around them — end to end, on real infrastructure, monitored and tested — not slideware.",
   sameAs: [
     "https://www.linkedin.com/in/tajammal-hussain-233293ab/",
     "https://github.com/TajammalHussain",
