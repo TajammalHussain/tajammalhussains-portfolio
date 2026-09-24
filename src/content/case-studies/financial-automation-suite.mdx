@@ -1,8 +1,8 @@
 ---
-title: "Financial Workflow Automation Suite"
+title: "Bespoke Financial Workflow Automation Suite"
 slug: "financial-automation-suite"
-summary: "Zoho Creator workflow suite for supplier payments, subcontractor payment certificates (CIS/HMRC/BACS logic) and CIS payment sheets, with e-signature and multi-level authorisation."
-stack: ["Zoho Creator", "Deluge", "Workflow Automation", "E-signature"]
+summary: "Custom-built automation suite for supplier payments, subcontractor certificates (CIS/HMRC/BACS logic) and CIS payment sheets: bespoke schema, workflow engine and multi-level approval pipeline."
+stack: ["Custom Data Model", "Workflow Engine", "Approval Automation", "E-signature", "System Design"]
 featured: false
 draft: true
 publishDate: 2026-09-24
@@ -12,33 +12,47 @@ problem: >
   sheets were produced through manual steps and manual approval chains. Each
   document had to be assembled by hand, passed between people for sign-off,
   and reconciled before payment, and the process depended on a dedicated
-  administrative role to keep it moving.
+  administrative role to keep it moving. There was no single structured
+  record of what had been requested, approved and paid.
 constraints: >
   Subcontractor payments carry CIS, HMRC and BACS requirements, so the
   calculations and outputs had to be correct and traceable rather than
-  approximately right. Approvals needed to support multiple authorisation
-  levels and a signature that could be captured digitally instead of on
-  paper.
+  approximately right. Approvals needed multiple authorisation levels and a
+  signature that could be captured digitally instead of on paper. The
+  solution also had to be owned end to end: designed around the business's
+  own process, not bent to fit a generic tool's data model, and structured so
+  new payment types could be added later without a redesign.
 approach: >
-  I designed the suite as a set of structured digital workflows on Zoho
-  Creator, scripted in Deluge. Each workflow replaces a manual approval chain
-  with defined stages: submission, multi-level authorisation, e-signature and
-  payment output. The CIS, HMRC and BACS logic is built into the workflow
-  itself so the correct figures and file outputs are produced by the system
-  rather than assembled by hand.
+  I engineered the suite as a standalone, custom-built system rather than a
+  configuration of an existing product. The starting point was the schema: a
+  tailored data model designed for operational efficiency, with separate,
+  well-defined entities for requests, approvals, certificates and payment
+  outputs. On top of it I built a bespoke workflow engine that moves each
+  record through defined stages (submission, multi-level authorisation,
+  e-signature, payment output) and a logic layer that applies the CIS, HMRC
+  and BACS rules inside the system, so the correct figures and file outputs
+  are produced by the process itself instead of being assembled by hand.
 architecture: >
-  Three linked workflow applications (supplier payments, subcontractor
-  payment certificates, CIS payment sheets) share the same pattern:
-  structured records, staged authorisation, captured e-signature, and generated
-  output documents.
+  A modular process-automation framework with three layers that are
+  deliberately independent of one another: a custom data model, a logic layer
+  (calculation rules and validation), and a workflow and approval pipeline
+  that routes records and captures e-signatures. Supplier payments,
+  subcontractor payment certificates and CIS payment sheets are three
+  workflows built on the same framework and share one approval and
+  documentation pattern. Because the schema and logic are not tied to any
+  external platform, the architecture is platform-agnostic and can be
+  extended with new workflows without reworking the foundation.
 outcome: >
-  The workflows eliminated a full administrative role and replaced manual
-  approval chains with structured digital workflows including e-signature and
-  multi-level authorisation.
+  The suite eliminated a full administrative role and replaced manual
+  approval chains with structured digital workflows, including e-signature
+  and multi-level authorisation. Every payment request, certificate and
+  payment sheet now lives in a structured record with a clear approval
+  history, in place of documents passed between people.
 retrospective: >
-  TODO(owner): add what you would do differently — left blank on purpose
-  rather than inventing it. Also review every statement in this draft for
-  accuracy and confidentiality before setting draft: false.
+  TODO(owner): add what you would do differently, left blank on purpose
+  rather than inventing it. Before setting draft: false, also review every
+  statement in this draft for accuracy and confidentiality, and add the real
+  implementation stack (language, database, hosting) if you want it shown.
 ---
 
 import MermaidDiagram from "@/components/MermaidDiagram.astro";
@@ -47,12 +61,18 @@ import MermaidDiagram from "@/components/MermaidDiagram.astro";
 
 <MermaidDiagram
   chart={`flowchart LR
-  A[Payment request\nor certificate] --> B[Structured record\nin Zoho Creator]
-  B --> C{Multi-level\nauthorisation}
-  C -->|approved| D[E-signature\ncaptured]
-  C -->|rejected| E[Returned with\nreason]
-  D --> F[CIS / HMRC / BACS\noutput generated]`}
+  A[Payment request\nor certificate] --> B[(Custom data model)]
+  B --> C[Logic layer\nCIS / HMRC / BACS rules]
+  C --> D{Multi-level\napproval pipeline}
+  D -->|approved| E[E-signature\ncaptured]
+  D -->|rejected| F[Returned with\nreason]
+  E --> G[Payment output\ngenerated]`}
 />
 
-TODO(owner): add the design decision that mattered most here, in your own
-words, before publishing.
+The design decision that mattered most was building the schema and logic layer
+as the foundation and treating each payment workflow as a module on top of it.
+Supplier payments, subcontractor certificates and CIS payment sheets differ in
+their rules but share the same approval and documentation pattern, so a new
+workflow means adding a module, not redesigning the system.
+
+TODO(owner): confirm this design decision in your own words before publishing.

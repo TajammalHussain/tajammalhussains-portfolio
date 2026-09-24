@@ -31,7 +31,7 @@
 - Domain background: construction / MEP operations — approval workflows,
   procurement, compliance systems.
 - Disciplines: data engineering (ETL/ELT, medallion architecture, data quality),
-  development (Go, React, PostgreSQL, Docker, Zoho Creator), systems analysis
+  development (Go, React, PostgreSQL, Docker, bespoke workflow systems), systems analysis
   (requirements, process mapping, UAT, Agile, documentation).
 - Stack: Python, SQL (T-SQL), Go, JavaScript, R, SQL Server, PostgreSQL, MySQL,
   React, Docker, Power BI, Azure (Data Factory, Data Lake, Synapse, Functions),

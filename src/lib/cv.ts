@@ -274,7 +274,7 @@ export const DISCIPLINES = [
     capabilities: [
       "Go REST APIs with JWT authentication over PostgreSQL",
       "React frontends and Docker deployment (Railway, Cloudflare)",
-      "Workflow automation on Zoho Creator (Deluge) and Python scheduled jobs",
+      "Bespoke workflow and approval automation, and Python scheduled jobs",
       "Rules-as-data engines, append-only audit logs, and snapshot-based record design",
     ],
     href: "/work/materials-requisition-portal",
