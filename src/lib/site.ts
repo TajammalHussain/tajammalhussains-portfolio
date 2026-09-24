@@ -6,11 +6,8 @@ export const SITE = {
   url: "https://tajammalhussain.co.uk",
   locale: "en_GB",
   location: "Derby, United Kingdom",
-  jobTitle: "Data Analyst",
-  // Kept separate from jobTitle deliberately — jobTitle is the accurate,
-  // ATS/schema-safe current title; targetRole is what recruiters should see
-  // alongside it, not a replacement for it (spec: don't misstate current title).
-  targetRole: "Data Engineer",
+  jobTitle: "Data Engineer",
+  headline: "Data Engineer | Systems Analyst | Development Specialist",
   description:
     "Data Analyst progressing toward Data Engineer. I design and run production data pipelines — end to end, on real infrastructure, monitored and tested — not slideware.",
   sameAs: [
