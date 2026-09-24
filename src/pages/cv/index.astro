@@ -1,7 +1,15 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import { SITE } from "@/lib/site";
-import { EDUCATION, CERTIFICATIONS, SKILLS, TRAJECTORY } from "@/lib/cv";
+import {
+  SUMMARY,
+  EXPERIENCE,
+  PORTFOLIO_PROJECTS,
+  EDUCATION,
+  CERTIFICATIONS,
+  SKILLS,
+  ADDITIONAL_INFO,
+} from "@/lib/cv";
 import { getEntry } from "astro:content";
 
 const settings = await getEntry("site-settings", "site");
@@ -10,7 +18,7 @@ const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
 
 <BaseLayout
   title="CV"
-  description="On-page CV for Tajammal Hussain — Data Analyst progressing toward Data Engineer. Downloadable PDF version available."
+  description="On-page CV for Tajammal Hussain — Data Engineer with four years of experience in data pipelines, automation, BI and full-stack development. Downloadable PDF version available."
 >
   <div class="mx-auto max-w-3xl">
     <div class="no-print mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -39,7 +47,7 @@ const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
       <header>
         <h2 class="text-2xl font-bold">{SITE.name}</h2>
         <p class="text-[var(--color-fg-muted)]">
-          {SITE.jobTitle} → {SITE.targetRole} · {SITE.location}
+          {SITE.targetRole} · {SITE.location}
         </p>
         <p class="mt-1 text-sm text-[var(--color-fg-muted)]">
           <a href={SITE.sameAs[1]} class="underline underline-offset-2">{SITE.sameAs[1]}</a> ·
@@ -48,13 +56,74 @@ const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
       </header>
 
       <section class="mt-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide">Summary</h3>
-        <p class="mt-2">{TRAJECTORY}</p>
+        <h3 class="text-sm font-bold uppercase tracking-wide">Professional Profile</h3>
+        <p class="mt-2">{SUMMARY}</p>
       </section>
 
       <section class="mt-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide">Skills</h3>
-        <dl class="mt-2 space-y-1">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Professional Experience</h3>
+        <div class="mt-3 space-y-5">
+          {
+            EXPERIENCE.map((job) => (
+              <div>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <p class="font-semibold">{job.title}</p>
+                  <p class="text-sm italic text-[var(--color-fg-muted)]">{job.period}</p>
+                </div>
+                <p class="text-sm italic text-[var(--color-fg-muted)]">
+                  {job.organisation}, {job.location}
+                </p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  {job.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Portfolio — {SITE.url.replace("https://", "")}</h3>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+          {
+            PORTFOLIO_PROJECTS.map((p) => (
+              <li>
+                <a href={p.href} class="font-medium underline underline-offset-2">{p.name}</a>: {p.detail}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Education</h3>
+        <div class="mt-3 space-y-4">
+          {
+            EDUCATION.map((e) => (
+              <div>
+                <div class="flex flex-wrap items-baseline justify-between gap-x-4">
+                  <p class="font-semibold">
+                    {e.qualification} — {e.grade}
+                  </p>
+                  <p class="text-sm italic text-[var(--color-fg-muted)]">{e.period}</p>
+                </div>
+                <p class="text-sm italic text-[var(--color-fg-muted)]">{e.institution}</p>
+                <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+                  {e.bullets.map((b) => (
+                    <li>{b}</li>
+                  ))}
+                </ul>
+              </div>
+            ))
+          }
+        </div>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Technical Skills</h3>
+        <dl class="mt-2 space-y-1 text-sm">
           {
             SKILLS.map((s) => (
               <div>
@@ -67,24 +136,8 @@ const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
       </section>
 
       <section class="mt-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide">Education</h3>
-        <ul class="mt-2 space-y-2">
-          {
-            EDUCATION.map((e) => (
-              <li>
-                <p class="font-semibold">{e.qualification}</p>
-                <p class="text-sm text-[var(--color-fg-muted)]">
-                  {e.institution} — {e.grade}
-                </p>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
-
-      <section class="mt-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide">Certifications</h3>
-        <ul class="mt-2 list-inside list-disc space-y-1 text-sm">
+        <h3 class="text-sm font-bold uppercase tracking-wide">Professional Certifications</h3>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
           {
             CERTIFICATIONS.map((c) => (
               <li>
@@ -98,10 +151,18 @@ const cvPdfPath = settings?.data.cvPdfPath ?? "/cv/Tajammal-Hussain-CV.pdf";
       </section>
 
       <section class="mt-6">
-        <h3 class="text-sm font-bold uppercase tracking-wide">Case Studies</h3>
-        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">
-          Full write-ups with architecture and outcomes: <a href="/work">{SITE.url}/work</a>
-        </p>
+        <h3 class="text-sm font-bold uppercase tracking-wide">Additional Information</h3>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-sm">
+          {ADDITIONAL_INFO.map((i) => <li>{i}</li>)}
+          <li>
+            Live project portfolio: <a href="/work" class="underline underline-offset-2">{SITE.url.replace("https://", "")}</a> — deployed pipelines, full-stack applications, and documented case studies.
+          </li>
+        </ul>
+      </section>
+
+      <section class="mt-6">
+        <h3 class="text-sm font-bold uppercase tracking-wide">References</h3>
+        <p class="mt-2 text-sm">Available upon request.</p>
       </section>
     </article>
 
